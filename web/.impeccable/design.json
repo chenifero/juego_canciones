@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-10T21:00:00Z",
+  "title": "Design System: BarmaGames",
+  "extensions": {
+    "colorMeta": {
+      "cyan": { "role": "primary", "displayName": "Cian cristal", "canonical": "#19c3ff", "tonalRamp": ["oklch(15% 0.04 230)", "oklch(26% 0.07 230)", "oklch(38% 0.10 230)", "oklch(50% 0.13 230)", "oklch(62% 0.15 230)", "oklch(76% 0.15 230)", "oklch(86% 0.10 230)", "oklch(95% 0.04 230)"] },
+      "glass-hi": { "role": "primary", "displayName": "Cian alto", "canonical": "#7fe0ff" },
+      "glass-lo": { "role": "primary", "displayName": "Cian bajo", "canonical": "#0f9fd6" },
+      "amber": { "role": "secondary", "displayName": "Ámbar bombilla", "canonical": "#ffc23d", "tonalRamp": ["oklch(15% 0.03 82)", "oklch(26% 0.05 82)", "oklch(38% 0.08 82)", "oklch(50% 0.11 82)", "oklch(64% 0.14 82)", "oklch(85% 0.16 82)", "oklch(91% 0.10 82)", "oklch(96% 0.04 82)"] },
+      "lamp-off": { "role": "secondary", "displayName": "Bombilla apagada", "canonical": "#3a2f17" },
+      "pink": { "role": "tertiary", "displayName": "Rosa rival", "canonical": "#ff3d8b", "tonalRamp": ["oklch(15% 0.05 3)", "oklch(26% 0.09 3)", "oklch(38% 0.14 3)", "oklch(50% 0.19 3)", "oklch(65% 0.24 3)", "oklch(76% 0.16 3)", "oklch(86% 0.09 3)", "oklch(95% 0.03 3)"] },
+      "ink": { "role": "neutral", "displayName": "Mueble", "canonical": "#0b0c0e", "tonalRamp": ["oklch(15% 0.005 260)", "oklch(22% 0.008 260)", "oklch(30% 0.01 260)", "oklch(42% 0.012 260)", "oklch(55% 0.015 260)", "oklch(68% 0.02 260)", "oklch(82% 0.012 260)", "oklch(95% 0.005 260)"] },
+      "night": { "role": "neutral", "displayName": "Noche", "canonical": "#111317" },
+      "panel": { "role": "neutral", "displayName": "Panel", "canonical": "#171a1f" },
+      "panel-2": { "role": "neutral", "displayName": "Panel 2", "canonical": "#1f232a" },
+      "line": { "role": "neutral", "displayName": "Línea", "canonical": "rgb(255 255 255 / 0.09)" },
+      "mute": { "role": "neutral", "displayName": "Gris rótulo", "canonical": "#8d97a6" },
+      "paper": { "role": "neutral", "displayName": "Papel", "canonical": "#f4f7fa" },
+      "print": { "role": "neutral", "displayName": "Tinta de serigrafía", "canonical": "#06121a" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "La gran cifra o palabra del momento: posición en el pulsador, VS, ganadora (34-54px)." },
+      "headline": { "displayName": "Headline", "purpose": "Títulos de sección y de cajón, estados vacíos (18-24px)." },
+      "title": { "displayName": "Title", "purpose": "Títulos de canción en Archivo comprimido y pesado, hasta 2 líneas (16-24px)." },
+      "body": { "displayName": "Body", "purpose": "Ayudas y estados vacíos; artista y metadatos a 13-14px." },
+      "label": { "displayName": "Label", "purpose": "Rótulos de pulsadores y estados de la ventana SUENA (13-19px)." },
+      "counter": { "displayName": "Counter", "purpose": "Puntos y tiempos en DSEG7, siempre dentro de una ventanilla LED (12-30px)." }
+    },
+    "shadows": [
+      { "name": "filete-cristal", "value": "inset 0 0 0 3px rgb(255 255 255 / 0.2), inset 0 0 0 4.5px rgb(6 18 26 / 0.45), inset 0 -18px 30px -18px rgb(0 0 0 / 0.35)", "purpose": "Canto serigrafiado de todo cristal encendido." },
+      { "name": "bisel", "value": "inset 0 1px 0 rgb(255 255 255 / 0.12), inset 0 -1px 0 rgb(0 0 0 / 0.6), 0 10px 24px -14px rgb(0 0 0 / 0.9)", "purpose": "Marco de metal oscuro que contiene cristales y la botonera." },
+      { "name": "pozo-led", "value": "inset 0 2px 6px rgb(0 0 0 / 0.9), inset 0 0 0 1px rgb(255 255 255 / 0.06)", "purpose": "Ventanilla negra de los contadores." },
+      { "name": "pulsador-reposo", "value": "inset 0 -6px 0 rgb(0 0 0 / 0.22), inset 0 2px 0 rgb(255 255 255 / 0.55), 0 14px 30px -12px var(--pulsador-glow)", "purpose": "Labio, brillo y resplandor del pulsador en reposo." },
+      { "name": "pulsador-pulsado", "value": "inset 0 -2px 0 rgb(0 0 0 / 0.22), inset 0 2px 0 rgb(255 255 255 / 0.4), 0 6px 16px -10px var(--pulsador-glow)", "purpose": "Pulsador hundido 3px." },
+      { "name": "bombilla-encendida", "value": "inset 0 0 0 1px rgb(0 0 0 / 0.25), 0 0 10px 1px rgb(255 194 61 / 0.75)", "purpose": "Halo de bombilla ámbar." },
+      { "name": "cajon", "value": "0 -24px 60px -10px rgb(0 0 0 / 0.8)", "purpose": "Cajón que sube desde abajo." },
+      { "name": "aviso", "value": "0 14px 30px -10px rgb(0 0 0 / 0.8)", "purpose": "Tira de aviso que cae desde arriba." }
+    ],
+    "motion": [
+      { "name": "ease-out-expo", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Curva de toda la máquina: pulsadores, destellos, rotulador, cambio de carátula." },
+      { "name": "pulsador-press", "value": "90ms ease-out-expo, translateY(3px)", "purpose": "Recorrido del pulsador." },
+      { "name": "breathe", "value": "2.2s ease-in-out infinite", "purpose": "El pulsador PIDE respira luz mientras puedes pedir." },
+      { "name": "pulse-fast", "value": "0.8s ease-in-out infinite", "purpose": "Cuenta atrás en sus últimos 10 s." },
+      { "name": "shake", "value": "0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97)", "purpose": "Marcador VS del duelo cuando el tiempo apremia." },
+      { "name": "bulb-chase", "value": "140ms step", "purpose": "Bombillas que persiguen: solo duelo, ganadora y entrada." },
+      { "name": "spring-cajon", "value": "spring 380/36", "purpose": "Subida y bajada de los cajones." },
+      { "name": "spring-peldano", "value": "spring 380/32", "purpose": "Reordenación de la escalera." },
+      { "name": "spring-sello", "value": "spring 520/22, desde scale 1.8", "purpose": "Sello que se estampa." },
+      { "name": "destello", "value": "0.6-0.9s ease-out-expo", "purpose": "LED y peldaño que suman puntos." }
+    ],
+    "breakpoints": [
+      { "name": "maquina", "value": "512px", "purpose": "Ancho máximo de la columna; no hay cambio de composición en escritorio." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Pulsador PIDE",
+      "kind": "button",
+      "refersTo": "pulsador-pide",
+      "description": "El pulsador principal de cristal cian; respira luz mientras puedes pedir.",
+      "html": "<button class=\"ds-pulsador ds-glass ds-pide\"><svg width=\"30\" height=\"30\" viewBox=\"0 0 256 256\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M212 40h-20V20a12 12 0 0 0-24 0v20h-20a12 12 0 0 0 0 24h20v20a12 12 0 0 0 24 0V64h20a12 12 0 0 0 0-24ZM100 52v119a40 40 0 1 0 24 36.6V84l52-13v52.4a40 40 0 1 0 24 36.6V108a12 12 0 0 0-24 0v.1Z\"/></svg><span>Pide tu<br>canción</span></button>",
+      "css": ".ds-pulsador { position: relative; border: 0; border-radius: 6px; box-shadow: inset 0 -6px 0 rgb(0 0 0 / 0.22), inset 0 2px 0 rgb(255 255 255 / 0.55), 0 14px 30px -12px var(--ds-glow, rgb(0 0 0 / 0.6)); transition: transform 90ms cubic-bezier(0.16,1,0.3,1), box-shadow 90ms cubic-bezier(0.16,1,0.3,1); cursor: pointer; } .ds-pulsador:active { transform: translateY(3px); box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.22), inset 0 2px 0 rgb(255 255 255 / 0.4), 0 6px 16px -10px var(--ds-glow, rgb(0 0 0 / 0.6)); } .ds-pulsador:focus-visible { outline: 3px solid var(--color-amber, #ffc23d); outline-offset: 3px; } .ds-glass { background: radial-gradient(120% 90% at 50% 30%, var(--color-glass-hi, #7fe0ff) 0%, var(--color-cyan, #19c3ff) 45%, var(--color-glass-lo, #0f9fd6) 100%); color: var(--color-print, #06121a); } .ds-pide { --ds-glow: rgb(25 195 255 / 0.55); display: flex; align-items: center; justify-content: center; gap: 10px; width: 260px; height: 100px; font-family: Bungee, 'Archivo Variable', sans-serif; font-size: 19px; line-height: 1.05; text-align: left; }"
+    },
+    {
+      "name": "Pulsador JUGAR",
+      "kind": "button",
+      "refersTo": "pulsador-jugar",
+      "description": "Pulsador ámbar con los créditos como bombillas.",
+      "html": "<button class=\"ds-pulsador ds-jugar\"><svg width=\"26\" height=\"26\" viewBox=\"0 0 256 256\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M215.8 119.6l-112 120A8 8 0 0 1 90.1 232l14.7-73.3-57.6-21.6a8 8 0 0 1-3-13l112-120a8 8 0 0 1 13.7 7.1L155.1 85l57.7 21.6a8 8 0 0 1 3 13Z\"/></svg><span>Jugar</span><span class=\"ds-bulbs\"><i class=\"ds-bulb on\"></i><i class=\"ds-bulb on\"></i><i class=\"ds-bulb\"></i></span></button>",
+      "css": ".ds-pulsador { position: relative; border: 0; border-radius: 6px; box-shadow: inset 0 -6px 0 rgb(0 0 0 / 0.22), inset 0 2px 0 rgb(255 255 255 / 0.55), 0 14px 30px -12px var(--ds-glow, rgb(0 0 0 / 0.6)); transition: transform 90ms cubic-bezier(0.16,1,0.3,1), box-shadow 90ms cubic-bezier(0.16,1,0.3,1); cursor: pointer; } .ds-pulsador:active { transform: translateY(3px); box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.22), inset 0 2px 0 rgb(255 255 255 / 0.4), 0 6px 16px -10px var(--ds-glow, rgb(0 0 0 / 0.6)); } .ds-pulsador:focus-visible { outline: 3px solid var(--color-amber, #ffc23d); outline-offset: 3px; } .ds-jugar { --ds-glow: rgb(255 194 61 / 0.45); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 104px; height: 100px; background: var(--color-amber, #ffc23d); color: var(--color-print, #06121a); font-family: Bungee, sans-serif; font-size: 15px; line-height: 1; } .ds-bulbs { display: flex; justify-content: space-between; width: 48px; } .ds-bulb { display: block; width: 7px; height: 7px; border-radius: 9999px; background: radial-gradient(circle at 35% 30%, #5a4a26 0%, var(--color-lamp-off, #3a2f17) 60%, #1f190c 100%); box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.5); } .ds-bulb.on { background: radial-gradient(circle at 35% 30%, #fff6d8 0%, var(--color-amber, #ffc23d) 45%, #c98a0b 100%); box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.25), 0 0 10px 1px rgb(255 194 61 / 0.75); }"
+    },
+    {
+      "name": "Pulsador de voto",
+      "kind": "button",
+      "refersTo": "pulsador-voto",
+      "description": "Botón +1 de cada peldaño: negro con rótulo y filete ámbar.",
+      "html": "<button class=\"ds-pulsador ds-voto\">+1</button>",
+      "css": ".ds-pulsador { position: relative; border: 0; border-radius: 6px; box-shadow: inset 0 -6px 0 rgb(0 0 0 / 0.22), inset 0 2px 0 rgb(255 255 255 / 0.55), 0 14px 30px -12px rgb(0 0 0 / 0.5); transition: transform 90ms cubic-bezier(0.16,1,0.3,1); cursor: pointer; } .ds-pulsador:active { transform: translateY(3px); } .ds-pulsador:focus-visible { outline: 3px solid var(--color-amber, #ffc23d); outline-offset: 3px; } .ds-voto { width: 64px; height: 32px; background: var(--color-ink, #0b0c0e); color: var(--color-amber, #ffc23d); font-family: Bungee, sans-serif; font-size: 14px; outline: 1px solid rgb(255 194 61 / 0.5); outline-offset: -1px; }"
+    },
+    {
+      "name": "Ventanilla LED",
+      "kind": "custom",
+      "refersTo": "ventanilla-led",
+      "description": "Contador de 7 segmentos con los ochos apagados visibles detrás.",
+      "html": "<span class=\"ds-led-well\"><span class=\"ds-led\"><span class=\"ds-led-ghost\">8:88</span><span class=\"ds-led-on\">1:56</span></span></span>",
+      "css": ".ds-led-well { display: inline-block; padding: 8px 10px; border-radius: 4px; background: #050607; box-shadow: inset 0 2px 6px rgb(0 0 0 / 0.9), inset 0 0 0 1px rgb(255 255 255 / 0.06); } .ds-led { position: relative; display: inline-block; font-family: DSEG7, ui-monospace, monospace; font-size: 24px; line-height: 1; color: var(--color-amber, #ffc23d); } .ds-led-ghost { opacity: 0.09; } .ds-led-on { position: absolute; inset: 0; text-shadow: 0 0 8px var(--color-amber, #ffc23d); }"
+    },
+    {
+      "name": "Peldaño de la escalera",
+      "kind": "card",
+      "refersTo": "escalera",
+      "description": "Peldaño encendido (#1) dentro del bisel: bombilla, posición, título y contador.",
+      "html": "<div class=\"ds-bezel\"><div class=\"ds-rung ds-glass\"><span class=\"ds-lamp\"><i class=\"ds-bulb on\"></i></span><span class=\"ds-pos\">1</span><span class=\"ds-cover\"></span><span class=\"ds-text\"><b>Despacito</b><small>Luis Fonsi</small></span><span class=\"ds-led-well\">013</span></div></div>",
+      "css": ".ds-bezel { padding: 3px; border-radius: 6px; background: linear-gradient(180deg, #262a31 0%, #15181d 100%); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), inset 0 -1px 0 rgb(0 0 0 / 0.6), 0 10px 24px -14px rgb(0 0 0 / 0.9); width: 360px; } .ds-glass { background: radial-gradient(120% 90% at 50% 30%, var(--color-glass-hi, #7fe0ff) 0%, var(--color-cyan, #19c3ff) 45%, var(--color-glass-lo, #0f9fd6) 100%); color: var(--color-print, #06121a); box-shadow: inset 0 0 0 3px rgb(255 255 255 / 0.2), inset 0 0 0 4.5px rgb(6 18 26 / 0.45), inset 0 -18px 30px -18px rgb(0 0 0 / 0.35); } .ds-rung { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 0; border-radius: 4px; } .ds-lamp { display: grid; place-items: center; width: 24px; align-self: stretch; border-right: 1px solid rgb(6 18 26 / 0.5); } .ds-bulb { display: block; width: 14px; height: 14px; border-radius: 9999px; } .ds-bulb.on { background: radial-gradient(circle at 35% 30%, #fff6d8 0%, #ffc23d 45%, #c98a0b 100%); box-shadow: 0 0 10px 1px rgb(255 194 61 / 0.75); } .ds-pos { width: 20px; text-align: center; font-family: Bungee, sans-serif; font-size: 20px; } .ds-cover { width: 52px; height: 52px; border-radius: 3px; background: #6a9a2a; box-shadow: 0 0 0 2px rgb(6 18 26 / 0.7); } .ds-text { flex: 1; min-width: 0; display: flex; flex-direction: column; } .ds-text b { font-family: 'Archivo Variable', sans-serif; font-weight: 800; font-stretch: 88%; font-size: 16px; line-height: 1.1; } .ds-text small { font-size: 13px; opacity: 0.75; } .ds-led-well { padding: 6px 8px; border-radius: 4px; background: #050607; color: #ffc23d; font-family: DSEG7, monospace; font-size: 17px; text-shadow: 0 0 8px #ffc23d; }"
+    },
+    {
+      "name": "Campo de búsqueda",
+      "kind": "input",
+      "refersTo": "campo-busqueda",
+      "description": "Placa de papel con tinta negra; anillo cian al enfocar.",
+      "html": "<label class=\"ds-search\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 256 256\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M232.5 215.5 185 168a92.1 92.1 0 1 0-17 17l47.5 47.5a12 12 0 0 0 17-17ZM44 112a68 68 0 1 1 68 68 68.1 68.1 0 0 1-68-68Z\"/></svg><input placeholder=\"Canción o artista\"></label>",
+      "css": ".ds-search { display: flex; align-items: center; gap: 12px; width: 320px; height: 56px; padding: 0 16px; border-radius: 6px; background: var(--color-paper, #f4f7fa); color: var(--color-print, #06121a); } .ds-search:focus-within { box-shadow: 0 0 0 4px rgb(25 195 255 / 0.6); } .ds-search input { flex: 1; height: 100%; border: 0; background: transparent; outline: none; font: 700 18px 'Archivo Variable', sans-serif; color: inherit; } .ds-search input::placeholder { color: rgb(6 18 26 / 0.45); }"
+    },
+    {
+      "name": "Cajón",
+      "kind": "nav",
+      "refersTo": "cajon",
+      "description": "Sheet que sube desde abajo con filete cian y botón cerrar cuadrado.",
+      "html": "<div class=\"ds-cajon\"><div class=\"ds-cajon-filete\"></div><div class=\"ds-cajon-head\"><span>Juegos bonus</span><button class=\"ds-cerrar\" aria-label=\"Cerrar\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 256 256\" fill=\"currentColor\"><path d=\"M208.5 191.5a12 12 0 0 1-17 17L128 145l-63.5 63.5a12 12 0 0 1-17-17L111 128 47.5 64.5a12 12 0 0 1 17-17L128 111l63.5-63.5a12 12 0 0 1 17 17L145 128Z\"/></svg></button></div><p class=\"ds-cajon-body\">Pide la tuya o vota una del ranking.</p></div>",
+      "css": ".ds-cajon { width: 360px; overflow: hidden; border-radius: 14px 14px 0 0; background: var(--color-night, #111317); color: var(--color-paper, #f4f7fa); box-shadow: 0 -24px 60px -10px rgb(0 0 0 / 0.8); } .ds-cajon-filete { height: 4px; background: var(--color-cyan, #19c3ff); } .ds-cajon-head { display: flex; align-items: center; gap: 12px; padding: 16px 20px 12px; font-family: Bungee, sans-serif; font-size: 20px; line-height: 1; } .ds-cajon-head span { flex: 1; } .ds-cerrar { display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 6px; background: var(--color-panel-2, #1f232a); color: var(--color-paper, #f4f7fa); cursor: pointer; } .ds-cerrar:active { transform: scale(0.95); } .ds-cerrar:focus-visible { outline: 3px solid var(--color-amber, #ffc23d); outline-offset: 3px; } .ds-cajon-body { margin: 0; padding: 0 20px 20px; font: 400 16px 'Archivo Variable', sans-serif; color: var(--color-mute, #8d97a6); }"
+    },
+    {
+      "name": "Sello",
+      "kind": "chip",
+      "refersTo": "sello",
+      "description": "Estado estampado e inclinado (EN COLA, EN DUELO, CERRADO).",
+      "html": "<span class=\"ds-sello\">En cola</span>",
+      "css": ".ds-sello { display: inline-block; white-space: nowrap; padding: 1px 6px; border: 2px solid var(--color-amber, #ffc23d); border-radius: 3px; color: var(--color-amber, #ffc23d); font-family: Bungee, sans-serif; font-size: 10px; line-height: 1.25; transform: rotate(-4deg); }"
+    },
+    {
+      "name": "Aviso",
+      "kind": "custom",
+      "refersTo": "aviso-ok",
+      "description": "Tira de color con letra impresa que cae desde arriba.",
+      "html": "<div class=\"ds-aviso\">«Despacito» ya está en el ranking</div>",
+      "css": ".ds-aviso { max-width: 384px; padding: 12px 16px; border-radius: 6px; background: var(--color-amber, #ffc23d); color: var(--color-print, #06121a); text-align: center; font: 800 15px 'Archivo Variable', sans-serif; box-shadow: 0 14px 30px -10px rgb(0 0 0 / 0.8); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "La tragaperras del bar",
+    "overview": "La pantalla del cliente es el frontal de una máquina de bar: mueble negro mate, paneles de cristal cian retroiluminado serigrafiados en negro, hileras de bombillas ámbar, contadores LED de 7 segmentos y pulsadores cuadrados con labio y luz interior. Todo lo que se toca es un pulsador, todo lo que cuenta es un LED, todo lo que está vivo se ilumina. Se lee de un vistazo, con una mano, a oscuras y con la música alta.\n\nLa densidad es de máquina, no de app: pocas piezas, grandes y físicas. El cristal encendido (cian) marca lo que importa ahora (lo que suena, el #1, el pulsador PIDE); el cristal apagado es el resto de la escalera. La luz ámbar es premio y crédito; el rosa existe solo para el rival del duelo. Los estados se estampan como sellos de goma y tu canción va rodeada a rotulador, el único gesto a mano dentro de la máquina.\n\nEl sistema rechaza la app de música oscura hecha de tarjetas con acento neón: aquí no hay tarjetas flotando, hay cristales dentro de un marco.",
+    "keyCharacteristics": [
+      "Cristal cian retroiluminado con tinta negra encima; nunca texto claro sobre cristal encendido.",
+      "Marcos de metal oscuro (bisel) que contienen cristales y ventanillas, con 3px de borde visible.",
+      "Números en LED de 7 segmentos con los segmentos apagados visibles detrás.",
+      "Bombillas ámbar en hilera para créditos, niveles y ambiente; persiguen solo en momentos de espectáculo.",
+      "Pulsadores cuadrados con labio inferior que se hunden 3px al pulsar.",
+      "Sellos inclinados para estados y un círculo de rotulador para lo tuyo."
+    ],
+    "rules": [
+      { "name": "La Regla del Rosa Rival", "body": "El rosa es del rival del duelo. Fuera del duelo solo aparece como alarma (tiempo agotándose, error, cerrado); nunca como decoración ni como segundo acento.", "section": "colors" },
+      { "name": "La Regla de la Tinta", "body": "Sobre cristal encendido o sobre ámbar, el texto es `print`. El texto claro solo vive sobre negro o sobre cristal apagado.", "section": "colors" },
+      { "name": "La Regla del Contador", "body": "Toda cifra que cambia en directo (puntos, tiempo, posición de juego) va en DSEG7 dentro de una ventanilla negra, con los \"8\" apagados detrás al 9 % de opacidad. Los números estáticos (posición del peldaño) van en Bungee.", "section": "typography" },
+      { "name": "La Regla del Rótulo Único", "body": "Nada se rotula dos veces: si la barra del duelo está a la vista, la ventana SUENA no repite el duelo.", "section": "typography" },
+      { "name": "La Regla de la Luz Propia", "body": "Lo que está encendido brilla con su propio color; lo apagado no tiene resplandor. El brillo comunica estado, nunca decora.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do pon el texto en `print` sobre cualquier cristal encendido o superficie ámbar.",
+      "Do mete toda cifra que cambia en directo en una ventanilla LED con sus segmentos apagados visibles.",
+      "Do construye cada pieza nueva como bisel (3px) con cristal dentro; los pulsadores, con labio y hundimiento de 3px.",
+      "Do reserva el cristal cian encendido para lo que importa ahora; el resto va en cristal apagado.",
+      "Do mueve una sola pieza a la vez y respeta `prefers-reduced-motion` (las bombillas dejan de perseguir y el rotulador aparece ya dibujado).",
+      "Do deja que los títulos de canción ocupen hasta dos líneas antes de cortar."
+    ],
+    "donts": [
+      "Don't uses el rosa fuera del rival del duelo salvo como alarma (tiempo, error, cerrado).",
+      "Don't hagas tarjetas flotantes con sombra y acento neón: es la app de música oscura que este sistema rechaza.",
+      "Don't pongas números en directo en Archivo o Bungee; van en DSEG7.",
+      "Don't redondees más allá de 6px salvo bombillas, avatares, pulsadores circulares de juego y el canto del cajón.",
+      "Don't rotules dos veces la misma información en pantalla.",
+      "Don't confíes nada al sonido: todo estado tiene que verse."
+    ]
+  }
+}

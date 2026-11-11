@@ -1,0 +1,25 @@
+# Despliegue en Fly.io (región Madrid). Ver README → "Publicar en Fly".
+app = "barmagames"
+primary_region = "mad"
+
+[env]
+  PORT = "8080"
+  DATA_DIR = "/data"
+  WEB_ORIGIN = "https://barmagames.fly.dev"
+  SPOTIFY_REDIRECT_URI = "https://barmagames.fly.dev/callback"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # El bucle que vigila Spotify no puede dormirse: una máquina siempre encendida
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[mounts]]
+  source = "barma_data"
+  destination = "/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

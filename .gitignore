@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+data/
+*.log
+.DS_Store
+# Impeccable: capturas y servidor de preguntas (efímeros)
+web/.impeccable/review/
+web/.impeccable/questions/

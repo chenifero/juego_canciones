@@ -1,0 +1,140 @@
+{
+  "title": "Elige el mundo visual de BarmaGames",
+  "question": "La tirada ha asignado «La tragaperras del bar». Quédatela, coge una alternativa o vuelve a tirar.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "La tragaperras del bar",
+      "kicker": "THE ROLL",
+      "lineage": "Las máquinas tragaperras de los bares españoles: cristal serigrafiado retroiluminado, bombillas y pulsadores",
+      "thesis": "La app es la máquina del bar: un pulsador gordo que dice PIDE y una escalera de premios que se enciende al subir.",
+      "palette": ["#0b0c0e", "#19c3ff", "#ffffff", "#ffc23d", "#ff3d8b"],
+      "materials": ["cristal cian retroiluminado", "bombillas que persiguen", "contadores LED de 7 segmentos", "pulsadores cuadrados iluminados"],
+      "viewport": "Arriba, la ventana de la canción que suena con su contador LED; en medio, la escalera de premios (el ranking) encendida; abajo, un pulsador enorme «PIDE TU CANCIÓN» que late.",
+      "risk": "Ejecutado con timidez cae en el típico neón sobre negro; tiene que ser cristal iluminado de verdad, no bordes que brillan.",
+      "raised": [
+        { "from": "Catálogo de convención (doujin)", "raise": "Tu canción va marcada con un círculo de rotulador en todas partes: un solo trazo dice «esta es la tuya»." },
+        { "from": "Cartera de billetes de avión", "raise": "Los estados se estampan sobre la canción (PEDIDA, EN DUELO, EN COLA, SONANDO); nada desaparece sin dejar sello." },
+        { "from": "Catálogo Factory / Saville", "raise": "Nada se rotula dos veces: cada dato aparece una vez, el resto lo dicen la luz y los números." },
+        { "from": "Página de raíl central", "raise": "Una sola pieza se mueve a la vez: la luz que sube por la escalera, nunca diez animaciones compitiendo." }
+      ],
+      "wireframe": { "cols": 6, "rows": 12, "regions": [
+        { "label": "ventana: suena ahora + LED", "x": 0, "y": 0, "w": 6, "h": 3 },
+        { "label": "escalera de premios (ranking)", "x": 0, "y": 3, "w": 6, "h": 6, "accent": true },
+        { "label": "PULSADOR: PIDE TU CANCIÓN", "x": 0, "y": 9, "w": 4, "h": 3, "accent": true },
+        { "label": "JUGAR (créditos)", "x": 4, "y": 9, "w": 2, "h": 3 }
+      ] }
+    },
+    {
+      "id": "model-pick",
+      "label": "La máquina de discos",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "Jukebox de bar: tiras de selección mecanografiadas, cromo y teclas A1–B8",
+      "thesis": "Pedir canción es lo de toda la vida: elegir tu disco en la máquina y ver cómo sube en la pila.",
+      "palette": ["#0b0c0e", "#f4f6f8", "#19c3ff", "#c9ced6"],
+      "materials": ["tiras de selección de papel", "cromo cepillado", "teclas con código", "disco girando"],
+      "viewport": "Arriba, el disco que suena girando; debajo, el panel de tiras de selección (el ranking) con su código; una tecla enorme «ELIGE TU DISCO».",
+      "risk": "Es el destino familiar: muchas apps de música de bar acaban aquí, y si se queda en atrezo retro, huele a nostalgia.",
+      "wireframe": { "cols": 6, "rows": 12, "regions": [
+        { "label": "disco girando + suena", "x": 0, "y": 0, "w": 6, "h": 3 },
+        { "label": "tiras de selección (ranking)", "x": 0, "y": 3, "w": 6, "h": 6, "accent": true },
+        { "label": "TECLA: ELIGE TU DISCO", "x": 0, "y": 9, "w": 6, "h": 3, "accent": true }
+      ] }
+    },
+    {
+      "id": "challenger-splitflap",
+      "label": "Panel de salidas (split-flap)",
+      "verdict": "competitive",
+      "lineage": "Paneles de estación de letras que chasquean",
+      "thesis": "El ranking como panel de salidas: cada canción es un tren y sus letras chasquean al cambiar de puesto.",
+      "palette": ["#0d0d0d", "#f2f2f2", "#ffb000", "#c8102e"],
+      "materials": ["paletas negras mate", "letra blanca pintada", "marco de acero", "pilotos ámbar"],
+      "viewport": "Un panel a pantalla completa con filas fijas por puesto; la tuya parpadea en ámbar; abajo, «PIDE».",
+      "case": "Encaja con el ranking en directo, pero pedir canción queda poco teatral y la estación no es el mundo del bar.",
+      "risk": "Se lee como una estación: frío y de sala de espera para un bar de noche.",
+      "hero": "https://impeccable.style/worlds/cards/signals-instruments-split-flap-concourse-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/signals-instruments-split-flap-concourse.webp"
+    },
+    {
+      "id": "challenger-crouwel",
+      "label": "Cartel-retícula (Crouwel)",
+      "verdict": "competitive",
+      "lineage": "Carteles de Wim Crouwel con letras construidas en retícula",
+      "thesis": "Puestos y puntos construidos a celdas gigantes: «#2» se lee a dos metros.",
+      "palette": ["#ffffff", "#19c3ff", "#0a0a0a", "#a9d8ff"],
+      "materials": ["retícula visible", "números monumentales a celdas", "grotesca pequeña"],
+      "viewport": "El puesto de tu canción enorme construido a celdas, con la retícula visible; el ranking cuelga debajo.",
+      "case": "Gana en claridad con los números monumentales, pero la gente del bar no se reconoce en un cartel suizo.",
+      "risk": "Puede quedar de museo: limpio, frío y poco de bar.",
+      "hero": "https://impeccable.style/worlds/cards/crouwel-grid-specimen-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/crouwel-grid-specimen.webp"
+    },
+    {
+      "id": "challenger-ticketwallet",
+      "label": "Cartera de billetes de avión",
+      "verdict": "declined",
+      "lineage": "Billetes de papel con copias de carbón y sellos",
+      "thesis": "Cada canción pedida es un cupón que se sella al avanzar.",
+      "palette": ["#13294b", "#d71920", "#ffffff", "#6b4fa0"],
+      "materials": ["papel de cupón", "copia de carbón", "sello VOID"],
+      "viewport": "Un taco de cupones, uno por canción.",
+      "case": "Pierde en identificación (no es el bar) y en claridad (demasiado papeleo).",
+      "kept": "Los estados se estampan: nada desaparece sin dejar sello.",
+      "risk": "Burocrático para una noche de bar.",
+      "hero": "https://impeccable.style/worlds/cards/vernacular-ephemera-jet-age-ticket-wallet-hero.webp"
+    },
+    {
+      "id": "challenger-doujin",
+      "label": "Catálogo de convención (doujin)",
+      "verdict": "declined",
+      "lineage": "Catálogos de ferias de cómic con miles de miniaturas",
+      "thesis": "Las canciones como sellos diminutos en una cuadrícula densa.",
+      "palette": ["#1a1a1a", "#e9e6df", "#e4322b"],
+      "materials": ["papel de periódico", "miniaturas", "rotulador"],
+      "viewport": "Una cuadrícula de carátulas diminutas.",
+      "case": "Demasiado denso: lo contrario de «conciso» y ajeno al bar.",
+      "kept": "Lo tuyo marcado con un único círculo de rotulador.",
+      "risk": "Ilegible con poca luz.",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-doujin-event-catalog-hero.webp"
+    },
+    {
+      "id": "challenger-saville",
+      "label": "Catálogo Factory / Saville",
+      "verdict": "declined",
+      "lineage": "Fundas de Factory Records en negro mate",
+      "thesis": "Todo codificado en franjas de color y números de catálogo.",
+      "palette": ["#0a0a0a", "#ffffff", "#ff5a1f", "#2bb3e6"],
+      "materials": ["negro mate", "líneas blancas", "franjas de color"],
+      "viewport": "Un campo negro con un trazado blanco.",
+      "case": "Codificado y críptico: justo lo contrario de entenderlo mirando.",
+      "kept": "Nada se rotula dos veces.",
+      "risk": "Nadie sabría qué hacer.",
+      "hero": "https://impeccable.style/worlds/cards/brand-identity-canon-saville-catalog-sleeve-hero.webp"
+    },
+    {
+      "id": "challenger-centrerail",
+      "label": "Página de raíl central",
+      "verdict": "declined",
+      "lineage": "Ediciones de referencia con raíl de llaves",
+      "thesis": "Dos columnas de texto en torno a un raíl de claves.",
+      "palette": ["#1a1714", "#c8371d", "#efe7d6"],
+      "materials": ["papel hueso", "filetes de un píxel"],
+      "viewport": "Dos columnas densas de texto.",
+      "case": "Es un mundo de lectura, no de bar ni de juego.",
+      "kept": "Una sola pieza se mueve a la vez.",
+      "risk": "Demasiado texto: justo lo que sobra.",
+      "hero": "https://impeccable.style/worlds/cards/rw-centre-rail-reference-setting-hero.webp"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "canon": true,
+  "canonCard": {
+    "label": "Lo estándar de la categoría",
+    "thesis": "Una app de música oscura tipo Spotify: listas, carátulas y un acento de color, bien hecha.",
+    "palette": ["#121212", "#1e1e1e", "#19c3ff", "#ffffff"],
+    "materials": ["lista de carátulas", "tarjetas planas", "barra inferior"],
+    "viewport": "La canción que suena arriba, la lista debajo y un botón flotante para pedir.",
+    "risk": "Indistinguible de cualquier app de música, que es justo lo que no te gusta ahora."
+  },
+  "steer": true
+}

@@ -1,0 +1,20 @@
+{
+  "name": "barmagames",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,web -c cyan,magenta \"npm run dev -w server\" \"npm run dev -w web\"",
+    "dev:mock": "concurrently -n server,web -c cyan,magenta \"npm run dev:mock -w server\" \"npm run dev -w web\"",
+    "build": "npm run build -w web",
+    "typecheck": "npm run typecheck -w server && npm run typecheck -w web",
+    "start": "npm run start -w server",
+    "test": "node server/scripts/smoke.ts"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.7"
+  }
+}
