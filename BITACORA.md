@@ -475,3 +475,9 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - **Alarma de cierre (`Urgency`)**: en los últimos 10 s la pantalla se pone en rojo (viñeta que late), la columna tiembla cada segundo y el móvil vibra, más fuerte en los 3 últimos. El rótulo pasa a rojo con «¡Se acaba el tiempo! Juega ya», y los LED del tiempo a rojo.
 - **Límites:** Safari en iPhone no permite vibrar desde una web, así que allí solo se ve (rojo y temblor). Android sí vibra.
 - Tipos, build y `npm test` en verde. **Falta verlo en el móvil** con una canción a punto de cerrar (no se ha podido simular el final de canción en pantalla).
+
+## 13/11/2026 · Alarma más roja y vibración en iPhone
+
+- **Más rojo:** el borde de la alarma pasa de 70 a 140 px de grosor (220 px en los 3 últimos segundos) y se añade un velo rojo sobre toda la pantalla. Comprobado en una captura de prueba: ahora se ve de sobra.
+- **Vibración:** Safari en iPhone no tiene `navigator.vibrate`. `vibrate()` (en `web/src/lib/util.ts`) usa ahora el toque háptico de un interruptor nativo (`<input switch>`, iOS 17.4+) cuando falta la vibración normal. Patrones más largos en la alarma (3 pulsos).
+- **Pendiente de confirmar en el móvil de Sergio:** el háptico de iOS puede exigir un toque reciente en la pantalla; si no vibra, no hay más remedio en una web (haría falta app nativa).

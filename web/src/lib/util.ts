@@ -5,11 +5,43 @@ export function fmtTime(ms: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
+let tickSwitch: HTMLLabelElement | null = null
+
+/**
+ * iPhone no tiene `navigator.vibrate`, pero Safari (17.4+) da un toque háptico
+ * al cambiar un interruptor nativo (`<input switch>`). Lo accionamos a mano.
+ */
+function iosTick(): void {
+  if (!tickSwitch) {
+    const label = document.createElement('label')
+    label.setAttribute('aria-hidden', 'true')
+    label.style.cssText = 'position:fixed;left:-200px;top:0;width:1px;height:1px;opacity:0;pointer-events:none'
+    const input = document.createElement('input')
+    input.type = 'checkbox'
+    input.setAttribute('switch', '')
+    input.tabIndex = -1
+    label.appendChild(input)
+    document.body.appendChild(label)
+    tickSwitch = label
+  }
+  tickSwitch.click()
+}
+
 export function vibrate(pattern: number | number[]): void {
   try {
-    navigator.vibrate?.(pattern)
+    if (typeof navigator.vibrate === 'function') {
+      navigator.vibrate(pattern)
+      return
+    }
+    // Sin vibración del navegador: un toque háptico por cada pulso del patrón
+    const steps = Array.isArray(pattern) ? pattern : [pattern]
+    let at = 0
+    steps.forEach((ms, i) => {
+      if (i % 2 === 0) setTimeout(iosTick, at)
+      at += ms
+    })
   } catch {
-    /* iOS no vibra: sin más */
+    /* sin vibración posible */
   }
 }
 

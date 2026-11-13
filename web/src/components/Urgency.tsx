@@ -39,7 +39,7 @@ export function Urgency({
   useEffect(() => {
     if (!secs) return
     const hot = secs <= 3
-    vibrate(hot ? [160, 50, 160] : [80])
+    vibrate(hot ? [120, 70, 120, 70, 120] : [80, 80, 80])
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const px = hot ? 7 : 3.5
     shakeRef.current?.animate(
