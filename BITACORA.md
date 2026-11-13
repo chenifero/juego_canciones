@@ -454,3 +454,9 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
   - La Trivia sigue usando las canciones de la noche.
 - **Comprobado con Spotify real:** 42 de 42 portadas encontradas. Tipos y `npm test` en verde (el simulador genera carátulas a partir del nombre).
 - Para añadir o quitar álbumes, basta con editar `FAMOUS_ALBUMS`.
+
+## 13/11/2026 · Suelo de puntos para la perdedora del duelo
+
+- **Problema:** la perdedora de un duelo conservaba solo el 50 % de sus puntos (p. ej. 16 → 8) y una canción nueva entra con 10, así que se colaba por delante de la que casi suena.
+- **Arreglo:** en `lock()` (`server/src/engine.ts`) la perdedora queda con `max(basePoints, mitad)`: nunca por debajo de una canción nueva.
+- La prueba de humo ya cubre el caso (16 → 10). Tipos y `npm test` en verde.

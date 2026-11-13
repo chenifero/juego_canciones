@@ -201,7 +201,10 @@ async function main() {
   check(await waitFor(() => !!result), 'Llega el resultado del duelo')
   const res = result as unknown as { winner: SongRequest; loser: SongRequest | null }
   check(res.winner.id === reqA.id, `Gana: ${res.winner.track.title}`)
-  check(res.loser?.points === Math.ceil((before + 2) * 0.5), `La perdedora conserva el 50 % (${res.loser?.points})`)
+  check(
+    res.loser?.points === Math.max(10, Math.ceil((before + 2) * 0.5)),
+    `La perdedora conserva el 50 %, pero nunca menos que una canción nueva (${res.loser?.points}, antes ${before + 2})`,
+  )
   check(ana.state!.locked?.id === reqA.id, 'La ganadora aparece como "siguiente"')
 
   // Saltamos para que suene ya

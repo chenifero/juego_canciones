@@ -653,7 +653,9 @@ export class Engine {
     winner.status = 'locked'
     winner.lockedRound = this.round
     this.lastLock = { winnerId: winner.id, loserId: loser?.id ?? null, loserPoints: loser?.points ?? 0, duel: duelBefore }
-    if (loser) loser.points = Math.ceil(loser.points * this.settings.loserKeepPct)
+    // Conserva parte de sus puntos, pero nunca menos de lo que vale una canción nueva:
+    // así una recién llegada no se cuela por delante de la que perdió el duelo
+    if (loser) loser.points = Math.max(this.settings.basePoints, Math.ceil(loser.points * this.settings.loserKeepPct))
     // Quien apoyaba a la ganadora queda libre para elegir otro equipo
     this.onChange()
     return winner
