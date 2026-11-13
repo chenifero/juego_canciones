@@ -127,6 +127,10 @@ export class MockProvider implements MusicProvider {
     return TRACKS.filter((t) => norm(`${t.title} ${t.artist}`).includes(q)).slice(0, 10)
   }
 
+  sampleTracks(): TrackInfo[] {
+    return TRACKS
+  }
+
   async getTrack(id: string): Promise<TrackInfo | null> {
     return TRACKS.find((t) => t.id === id) ?? null
   }

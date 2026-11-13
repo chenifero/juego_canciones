@@ -3,6 +3,7 @@ import {
   Backspace,
   ListNumbers,
   Martini,
+  ImageBroken,
   Minus,
   Pill,
   Plus,
@@ -23,6 +24,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import QRCode from 'qrcode'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { AdminState, PublicState, Settings } from '../../../shared/types.ts'
+import { Avatar } from '../components/Avatar.tsx'
 import { Bulbs, Led, Stamp } from '../components/machine.tsx'
 import { Sheet } from '../components/Sheet.tsx'
 import { toast } from '../components/Toasts.tsx'
@@ -525,14 +527,24 @@ function PeopleDrawer({ open, onClose, admin, act }: { open: boolean; onClose: (
         <ul className="flex flex-col">
           {admin.users.map((u) => (
             <li key={u.id} className="flex items-center gap-3 border-b border-line py-2">
-              <span className="relative grid size-11 shrink-0 place-items-center rounded-full bg-panel-2 text-[20px]">
-                {u.emoji}
+              <span className="relative shrink-0">
+                <Avatar user={u} size={44} ring="border-0" />
                 {u.online && <span className="bulb-on absolute -right-0.5 -top-0.5 size-3" aria-label="Conectado" />}
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[16px] font-bold">{u.alias}</p>
                 <p className="text-[13px] text-mute">{u.requests === 1 ? '1 canción pedida' : `${u.requests} canciones pedidas`}</p>
               </div>
+              {u.photo && (
+                <ConfirmButton
+                  onConfirm={() => act('admin:photo', { userId: u.id }, `Foto de ${u.alias} quitada`)}
+                  className="pulsador grid size-11 shrink-0 place-items-center bg-panel-2"
+                  label={`Quitar la foto de ${u.alias}`}
+                  armedChildren={<span className="text-[12px] font-bold">¿Quitar?</span>}
+                >
+                  <ImageBroken size={20} weight="bold" aria-hidden />
+                </ConfirmButton>
+              )}
               <ConfirmButton
                 onConfirm={() => act('admin:ban', { userId: u.id }, `${u.alias} bloqueado`)}
                 className="pulsador flex h-11 shrink-0 items-center gap-2 bg-panel-2 px-3 text-[14px] font-bold"

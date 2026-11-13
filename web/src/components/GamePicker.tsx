@@ -1,11 +1,19 @@
-import { HandFist, Timer, TrafficSignal, type Icon } from '@phosphor-icons/react'
+import { Cards, HandFist, ImageSquare, Question, Target, Timer, TrafficSignal, type Icon } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
 import type { GameId, MeState, PublicState } from '../../../shared/types.ts'
-import { GAMES } from '../lib/util.ts'
+import { GAMES, cx } from '../lib/util.ts'
 import { Bulbs, Led } from './machine.tsx'
 import { Sheet } from './Sheet.tsx'
 
-export const GAME_ICON: Record<GameId, Icon> = { tap: HandFist, reflex: TrafficSignal, stopwatch: Timer }
+export const GAME_ICON: Record<GameId, Icon> = {
+  tap: HandFist,
+  reflex: TrafficSignal,
+  memory: Cards,
+  rhythm: Target,
+  cover: ImageSquare,
+  trivia: Question,
+  stopwatch: Timer,
+}
 
 /** Créditos (energía) como bombillas. */
 export function EnergyPips({ me }: { me: MeState | null }) {
@@ -50,30 +58,41 @@ export function GamePicker({
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2.5">
-            {(Object.keys(GAMES) as GameId[]).map((id, i) => {
+            {(Object.keys(GAMES) as GameId[]).map((id, i, all) => {
               const g = GAMES[id]
               const Glyph = GAME_ICON[id]
+              const level = g.level === 3 ? 'muy difícil' : g.level === 2 ? 'difícil' : 'fácil'
+              // El último es el premio gordo: ocupa toda la fila, como el bote de la máquina
+              const jackpot = i === all.length - 1
+              const points = (
+                <span className={cx('flex items-center gap-1.5', !jackpot && 'flex-col')}>
+                  <span className="led-well rounded-[4px] px-2 py-1">
+                    <Led value={g.max * mult} digits={2} className="text-[18px]" />
+                  </span>
+                  <span className="rounded-full bg-print px-1.5 py-1">
+                    <Bulbs count={3} lit={g.level} size={6} className="w-9" />
+                  </span>
+                </span>
+              )
               return (
                 <motion.button
                   key={id}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
+                  transition={{ delay: i * 0.04 }}
                   disabled={empty}
                   onClick={() => onStart(id)}
-                  className="pulsador flex aspect-[3/4] flex-col items-center justify-between bg-amber px-1.5 py-3 text-print [--pulsador-glow:rgb(255_194_61/0.4)]"
-                  aria-label={`${g.name}: hasta ${g.max * mult} puntos, ${g.level > 1 ? 'difícil' : 'fácil'}`}
+                  className={cx(
+                    'pulsador flex bg-amber text-print [--pulsador-glow:rgb(255_194_61/0.4)]',
+                    jackpot ? 'col-span-3 h-[76px] items-center gap-3 px-4' : 'aspect-[3/4] flex-col items-center justify-between px-1.5 py-3',
+                  )}
+                  aria-label={`${g.name}: hasta ${g.max * mult} puntos, ${level}`}
                 >
-                  <Glyph size={34} weight="fill" aria-hidden />
-                  <span className="text-center font-display text-[13px] leading-tight">{g.name}</span>
-                  <span className="flex flex-col items-center gap-1.5">
-                    <span className="led-well rounded-[4px] px-2 py-1">
-                      <Led value={g.max * mult} digits={2} className="text-[18px]" />
-                    </span>
-                    <span className="rounded-full bg-print px-1.5 py-1">
-                      <Bulbs count={3} lit={g.level} size={6} className="w-9" />
-                    </span>
+                  <Glyph size={jackpot ? 30 : 34} weight="fill" aria-hidden />
+                  <span className={cx('font-display leading-tight', jackpot ? 'flex-1 text-left text-[16px]' : 'text-center text-[13px]')}>
+                    {g.name}
                   </span>
+                  {points}
                 </motion.button>
               )
             })}

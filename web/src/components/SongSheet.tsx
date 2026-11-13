@@ -1,4 +1,4 @@
-import { Lightning } from '@phosphor-icons/react'
+import { Camera, Lightning } from '@phosphor-icons/react'
 import type { MeState, PublicState, SongRequest } from '../../../shared/types.ts'
 import { Bulbs, Led, Stamp } from './machine.tsx'
 import { TeamBubbles } from './Ranking.tsx'
@@ -11,6 +11,7 @@ export function SongSheet({
   onClose,
   onSupport,
   onPlay,
+  onFace,
 }: {
   request: SongRequest | null
   state: PublicState
@@ -18,6 +19,8 @@ export function SongSheet({
   onClose: () => void
   onSupport: (id: string) => void
   onPlay: () => void
+  /** Abrir «Tu cara» para hacerse el selfie del VS. */
+  onFace: () => void
 }) {
   // Siempre la versión más reciente desde el estado
   const r = request ? (state.ranking.find((x) => x.id === request.id) ?? null) : null
@@ -84,6 +87,11 @@ export function SongSheet({
               >
                 <Lightning size={24} weight="fill" aria-hidden /> Jugar por ella
                 <Bulbs count={me?.maxEnergy ?? 3} lit={me?.energy ?? 0} size={8} className="w-14" />
+              </button>
+            )}
+            {mine && !me?.user.photo && (
+              <button onClick={onFace} className="pulsador flex h-14 items-center justify-center gap-2 bg-panel-2 font-display text-[15px]">
+                <Camera size={20} weight="fill" aria-hidden /> Pon tu cara en el VS
               </button>
             )}
           </div>

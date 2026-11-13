@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useState } from 'react'
 import { onDuelResult, type DuelResult } from '../lib/store.ts'
 import { vibrate } from '../lib/util.ts'
+import { Avatar } from './Avatar.tsx'
 import { Bulbs, Stamp } from './machine.tsx'
 
 const COLORS = ['var(--color-cyan)', 'var(--color-amber)', 'var(--color-paper)']
@@ -93,8 +94,8 @@ export function WinnerOverlay() {
             </motion.div>
             <motion.div initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.35 }}>
               <p className="mt-6 text-[24px] font-[900] leading-tight [font-stretch:88%]">{res.winner.track.title}</p>
-              <p className="mt-1 text-[16px] text-mute">
-                <span aria-hidden>{res.winner.by.emoji}</span> {res.winner.by.alias}
+              <p className="mt-2 flex items-center justify-center gap-2 text-[16px] text-mute">
+                <Avatar user={res.winner.by} size={res.winner.by.photo ? 40 : 28} className="border-2" /> {res.winner.by.alias}
               </p>
               {res.loser && (
                 <p className="mt-5 text-[14px] text-paper/70">

@@ -2,6 +2,7 @@ import { Lightning, MusicNotesPlus, WifiSlash } from '@phosphor-icons/react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { GameId, GameSession, MeState, PublicState, SongRequest } from '../../../shared/types.ts'
+import { Avatar, FaceSheet } from '../components/Avatar.tsx'
 import { DoseSheet } from '../components/DoseSheet.tsx'
 import { DuelBar, DuelOverlay, getDuel } from '../components/DuelView.tsx'
 import { GamePicker } from '../components/GamePicker.tsx'
@@ -34,6 +35,7 @@ export function Home({
   const [pickerOpen, setPickerOpen] = useState(false)
   const [selected, setSelected] = useState<SongRequest | null>(null)
   const [session, setSession] = useState<GameSession | null>(null)
+  const [faceOpen, setFaceOpen] = useState(false)
 
   // El duelo se abre a pantalla completa una vez por duelo; luego se puede minimizar
   const duel = getDuel(state)
@@ -82,12 +84,14 @@ export function Home({
         <div className="mt-3 flex items-center gap-2.5">
           <img src="/brand/logo-mark.png" alt="" className="h-9 w-auto" />
           <span className="font-display text-[17px] leading-none">BarmaGames</span>
-          <span className="ml-auto flex max-w-[45%] items-center gap-2 rounded-full bg-panel py-1 pl-1 pr-3">
-            <span className="grid size-7 place-items-center rounded-full bg-panel-2 text-[15px]" aria-hidden>
-              {me.user.emoji}
-            </span>
+          <button
+            onClick={() => setFaceOpen(true)}
+            className="ml-auto flex max-w-[45%] items-center gap-2 rounded-full bg-panel py-1 pl-1 pr-3 active:scale-95"
+            aria-label={me.user.photo ? 'Tu cara: cambiar el selfie' : 'Tu cara: hacerte un selfie'}
+          >
+            <Avatar user={me.user} size={28} ring="border-0" />
             <span className="truncate text-[14px] font-bold">{me.user.alias}</span>
-          </span>
+          </button>
         </div>
       </header>
 
@@ -131,7 +135,12 @@ export function Home({
           setSelected(null)
           setPickerOpen(true)
         }}
+        onFace={() => {
+          setSelected(null)
+          setFaceOpen(true)
+        }}
       />
+      <FaceSheet open={faceOpen} onClose={() => setFaceOpen(false)} user={me.user} />
       <GamePicker open={pickerOpen} onClose={() => setPickerOpen(false)} state={state} me={me} onStart={play} />
       <DoseSheet code={doseCode} state={state} me={me} onClose={clearDose} />
       <DuelOverlay
@@ -225,7 +234,7 @@ function Deck({
           <button
             onClick={onPlay}
             className="pulsador flex h-[100px] flex-col items-center justify-center gap-1.5 bg-amber text-print [--pulsador-glow:rgb(255_194_61/0.45)]"
-            aria-label={`Jugar. Te quedan ${me.energy} partidas`}
+            aria-label={`Jugar. Te ${me.energy === 1 ? 'queda 1 partida' : `quedan ${me.energy} partidas`}`}
           >
             <Lightning size={26} weight="fill" aria-hidden />
             <span className="font-display text-[15px] leading-none">Jugar</span>

@@ -25,18 +25,19 @@ No es una jukebox de cola: es una competición en directo. La canción que suena
 - Se entra por un QR fijo en un cartel A3. No hay tele en el bar: todo se ve en los móviles.
 - Cada noche es una sesión que abre y cierra la dueña; al cerrarla se borra todo.
 - Música muy alta: nada puede depender del sonido.
-- Sin registro: solo un alias y un emoji.
+- Sin registro: solo un alias y un emoji (y, si quiere, un selfie que se borra al cerrar la noche).
 
 ## Capabilities and Constraints
 
 - **Ronda = la canción que suena.** Estado de la ronda: abierta, duelo final (#1 contra #2 con puntos ×2; el resto congelado), cerrada (20 s antes del final la ganadora entra en la cola de Spotify) o en espera (nada sonando).
 - **Pedir canción:** buscar en Spotify y pedir. Límites: 1 canción activa por persona, 15 min de espera desde que suena la tuya, máximo 3 por hora, sin repetir la misma en 2 h y máximo 7 min de duración.
 - **Apoyar:** unirse al equipo de una canción. Incluye un voto gratis (+1) por ronda.
-- **Minijuegos** (solo visuales y táctiles): Machaca el botón, Reflejos y Crono a ciegas. Hay 3 partidas por ronda ("energía") y los puntos van a la canción de tu equipo.
+- **Minijuegos** (solo visuales y táctiles): Machaca el botón, Reflejos, Memoria, Al ritmo, Carátula (pixelada), Trivia y Crono a ciegas. Hay 3 partidas por ronda ("energía") y los puntos van a la canción de tu equipo. En Carátula y Trivia las preguntas y la respuesta buena las pone el servidor.
+- **Selfie:** opcional. Sale como cara de la canción en el VS y en las burbujas del equipo. La dueña puede quitar cualquiera y todas se borran al cerrar la noche.
 - **Dosis:** con cada consumición, la dueña enseña un QR de un solo uso que suma puntos a la canción que elijas.
 - **Happy hour:** la dueña la activa y todo vale ×2.
 - La perdedora del duelo conserva el 50 % de sus puntos.
-- **Pendiente:** fotos de los usuarios en el VS y más minijuegos.
+- **Pendiente:** rediseñar el cartel y desplegar en Fly.
 - **Stack:** React 19, Vite, Tailwind 4, Motion y Socket.IO. Funciona con conexiones móviles de bar (la wifi puede ser mala).
 
 ## Brand Commitments

@@ -23,4 +23,6 @@ export interface MusicProvider {
   getTrack(id: string): Promise<TrackInfo | null>
   addToQueue(uri: string): Promise<void>
   skip(): Promise<void>
+  /** Solo el simulador: todo su catálogo, para las preguntas de los minijuegos. */
+  sampleTracks?(): TrackInfo[]
 }

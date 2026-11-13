@@ -9,6 +9,8 @@ import { Engine, GameError, type EngineSnapshot } from './engine.ts'
 import { MockProvider } from './music/mock.ts'
 import type { MusicProvider } from './music/provider.ts'
 import { SpotifyProvider } from './music/spotify.ts'
+import { PHOTO_DIR, deleteAllPhotos, deletePhoto, savePhoto } from './photos.ts'
+import { MIN_ARTISTS, SEED_QUERIES, distinctArtists, poolEntries } from './quiz.ts'
 import { debounced, readJson, writeJson } from './store.ts'
 
 // ───────────────────────── motor + reproductor ─────────────────────────
@@ -60,6 +62,9 @@ app.get('/callback', async (req, res) => {
     res.redirect(`${back}?spotify=${encodeURIComponent((err as Error).message)}`)
   }
 })
+
+// Selfies de la noche (la URL lleva versión, así que se pueden cachear)
+app.use('/api/fotos', express.static(PHOTO_DIR, { maxAge: '1d' }), (_req, res) => void res.status(404).end())
 
 // En producción el servidor sirve también la web compilada
 if (existsSync(config.webDist)) {
@@ -179,6 +184,32 @@ function cacheTracks(tracks: TrackInfo[]): void {
   if (trackCache.size > 2_000) for (const [k, v] of trackCache) if (now - v.at > 30 * 60_000) trackCache.delete(k)
 }
 
+/**
+ * Bote de canciones para la carátula pixelada y la trivia: lo que se ha buscado esta noche
+ * y, si aún hay poco, unas búsquedas de reserva (se hacen una vez y se guardan 1 h).
+ */
+let seedTracks: TrackInfo[] = []
+let seedAt = 0
+let seeding: Promise<void> | null = null
+function quizPool(): TrackInfo[] {
+  return [...[...trackCache.values()].map((v) => v.track), ...seedTracks, ...(music.sampleTracks?.() ?? [])]
+}
+async function ensureQuizPool(): Promise<TrackInfo[]> {
+  const enough = distinctArtists(poolEntries([...engine.tracksTonight(), ...quizPool()])) >= MIN_ARTISTS * 2
+  if (!enough && Date.now() - seedAt > 60 * 60_000) {
+    seeding ??= (async () => {
+      const found = await Promise.allSettled(SEED_QUERIES.map((q) => music.search(q)))
+      const tracks = found.flatMap((r) => (r.status === 'fulfilled' ? r.value : []))
+      if (tracks.length) {
+        seedTracks = tracks
+        seedAt = Date.now()
+      }
+    })().finally(() => (seeding = null))
+    await seeding
+  }
+  return quizPool()
+}
+
 io.on('connection', (socket) => {
   const auth = socket.handshake.auth as { token?: string; deviceId?: string; adminToken?: string }
   const deviceId = typeof auth.deviceId === 'string' ? auth.deviceId.slice(0, 64) : ''
@@ -238,8 +269,29 @@ io.on('connection', (socket) => {
   })
 
   on(socket, 'support', (p) => engine.support(me(), p.requestId))
-  on(socket, 'game:start', (p) => engine.startGame(me(), p.game))
+  on(socket, 'game:start', async (p) => {
+    const u = me()
+    const pool = p.game === 'cover' || p.game === 'trivia' ? await ensureQuizPool() : []
+    return engine.startGame(u, p.game, pool)
+  })
+  on(socket, 'game:answer', (p) => engine.answerQuiz(me(), p.sessionId, p.choice, p.ms))
   on(socket, 'game:finish', (p) => engine.finishGame(me(), p.sessionId, p.score))
+
+  let lastPhoto = 0
+  on(socket, 'photo:set', (p) => {
+    const u = me()
+    if (Date.now() - lastPhoto < 3_000) throw new GameError('Espera un momento antes de cambiarla', 'RATE')
+    savePhoto(u.id, p.data)
+    lastPhoto = Date.now()
+    engine.setPhoto(u)
+    return engine.meState(u).user
+  })
+  on(socket, 'photo:clear', () => {
+    const u = me()
+    deletePhoto(u.id)
+    engine.clearPhoto(u.id)
+    return true
+  })
   on(socket, 'dose:redeem', (p) => engine.redeemDose(me(), p.code, p.requestId))
 
   // ── panel de la dueña ──
@@ -260,6 +312,7 @@ io.on('connection', (socket) => {
     if (p.open) engine.openNight()
     else {
       engine.closeNight()
+      deleteAllPhotos()
       // Los usuarios se han borrado: cada móvil conectado olvida el suyo y, al reabrir, pide alias nuevo.
       for (const s of io.sockets.sockets.values()) {
         const uid = s.data.userId as string | undefined
@@ -282,6 +335,7 @@ io.on('connection', (socket) => {
     admin(p)
     const uid = String(p.userId ?? '')
     engine.ban(uid)
+    deletePhoto(uid)
     for (const s of io.sockets.sockets.values()) {
       if (s.data.userId === uid) {
         s.data.userId = undefined
@@ -289,6 +343,13 @@ io.on('connection', (socket) => {
         s.emit('session:expired', { banned: true })
       }
     }
+    return true
+  })
+  on(socket, 'admin:photo', (p) => {
+    admin(p)
+    const uid = String(p.userId ?? '')
+    engine.clearPhoto(uid)
+    deletePhoto(uid)
     return true
   })
   on(socket, 'admin:clearBans', (p) => {

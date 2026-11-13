@@ -8,9 +8,23 @@ import { toast } from '../components/Toasts.tsx'
 import { emit } from '../lib/socket.ts'
 import { serverNow } from '../lib/store.ts'
 import { GAMES, vibrate } from '../lib/util.ts'
+import { MemoryGame } from './MemoryGame.tsx'
+import { QuizGame } from './QuizGame.tsx'
 import { ReflexGame } from './ReflexGame.tsx'
+import { RhythmGame } from './RhythmGame.tsx'
 import { StopwatchGame } from './StopwatchGame.tsx'
 import { TapGame } from './TapGame.tsx'
+
+type GameProps = { durationMs: number; onDone: (score: number) => void; session: GameSession }
+const GAME_VIEW: Record<GameId, (p: GameProps) => React.ReactNode> = {
+  tap: TapGame,
+  reflex: ReflexGame,
+  memory: MemoryGame,
+  rhythm: RhythmGame,
+  cover: QuizGame,
+  trivia: QuizGame,
+  stopwatch: StopwatchGame,
+}
 
 type Stage = 'countdown' | 'play' | 'sending' | 'result'
 
@@ -73,11 +87,11 @@ export function GameRunner({
 
   const info = session ? GAMES[session.game] : null
   const Glyph = session ? GAME_ICON[session.game] : null
-  const Game = session?.game === 'tap' ? TapGame : session?.game === 'reflex' ? ReflexGame : StopwatchGame
+  const Game = session ? GAME_VIEW[session.game] : null
 
   return (
     <AnimatePresence>
-      {session && info && Glyph && (
+      {session && info && Glyph && Game && (
         <motion.div
           className="fixed inset-0 z-[60] flex flex-col bg-ink safe-top safe-bottom"
           initial={{ opacity: 0, y: 40 }}
@@ -85,7 +99,7 @@ export function GameRunner({
           exit={{ opacity: 0, y: 40 }}
           transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
         >
-          <header className="flex items-center gap-3 px-4 pt-1">
+          <header className="mx-auto flex w-full max-w-lg items-center gap-3 px-4 pt-1">
             <span className="grid size-10 place-items-center rounded-machine bg-amber text-print">
               <Glyph size={22} weight="fill" aria-hidden />
             </span>
@@ -97,7 +111,7 @@ export function GameRunner({
             )}
           </header>
 
-          <div className="relative min-h-0 flex-1 px-4 py-4">
+          <div className="relative mx-auto min-h-0 w-full max-w-lg flex-1 px-4 py-4">
             {stage === 'countdown' && (
               <div className="grid h-full place-items-center">
                 <div className="flex flex-col items-center text-center">
@@ -117,7 +131,7 @@ export function GameRunner({
                 </div>
               </div>
             )}
-            {stage === 'play' && <Game durationMs={session.durationMs} onDone={onDone} />}
+            {stage === 'play' && <Game durationMs={session.durationMs} onDone={onDone} session={session} />}
             {stage === 'sending' && (
               <div className="grid h-full place-items-center">
                 <Bulbs count={5} chase size={14} className="w-40" />

@@ -9,12 +9,14 @@ import type {
   Phase,
   PublicState,
   PublicUser,
+  QuizAnswer,
   Settings,
   SongRequest,
   SpotifyStatus,
   TrackInfo,
 } from '../../shared/types.ts'
 import type { Playback } from './music/provider.ts'
+import { buildCoverQuiz, buildTriviaQuiz, poolEntries, type BuiltRound } from './quiz.ts'
 
 export class GameError extends Error {
   code: string
@@ -55,6 +57,8 @@ interface User {
   requestTimes: number[]
   lastPlayedAt: number
   teamId: string | null
+  /** Versión del selfie (0 = sin foto). Cambia cada vez que sube una nueva. */
+  photoV?: number
 }
 
 interface Req {
@@ -83,6 +87,9 @@ interface Session {
   requestId: string
   startsAt: number
   durationMs: number
+  /** Juegos de acertar: respuesta buena de cada ronda y lo que ha contestado. */
+  quiz?: BuiltRound[]
+  answers?: QuizAnswer[]
 }
 
 interface Dose {
@@ -106,7 +113,16 @@ export interface EngineSnapshot {
 
 /** Cuenta atrás para los minijuegos (3, 2, 1…). */
 const GAME_COUNTDOWN_MS = 3_000
-const GAME_DURATION: Record<GameId, number> = { tap: 10_000, reflex: 24_000, stopwatch: 13_000 }
+const GAME_DURATION: Record<GameId, number> = {
+  tap: 10_000,
+  reflex: 24_000,
+  memory: 40_000,
+  rhythm: 16_000,
+  cover: 26_000,
+  trivia: 48_000,
+  stopwatch: 13_000,
+}
+const GAME_IDS = Object.keys(GAME_DURATION) as GameId[]
 
 const id = (bytes = 8) => randomBytes(bytes).toString('hex')
 
@@ -168,7 +184,27 @@ export class Engine {
   // ───────────────────────── usuarios ─────────────────────────
 
   private pub(u: User | undefined): PublicUser | null {
-    return u ? { id: u.id, alias: u.alias, emoji: u.emoji } : null
+    if (!u) return null
+    const base = { id: u.id, alias: u.alias, emoji: u.emoji }
+    return u.photoV ? { ...base, photo: `/api/fotos/${u.id}.jpg?v=${u.photoV}` } : base
+  }
+
+  // ───────────────────────── selfies ─────────────────────────
+
+  /** Marca que el usuario tiene foto nueva (el archivo lo guarda index.ts). */
+  setPhoto(u: User): void {
+    u.photoV = (u.photoV ?? 0) + 1
+    this.onChange()
+  }
+
+  /** Quita la foto. Devuelve si tenía. */
+  clearPhoto(userId: unknown): boolean {
+    const u = typeof userId === 'string' ? this.users.get(userId) : undefined
+    if (!u) throw new GameError('Usuario no encontrado')
+    const had = !!u.photoV
+    u.photoV = 0
+    this.onChange()
+    return had
   }
 
   auth(token: unknown): User | undefined {
@@ -358,8 +394,19 @@ export class Engine {
     return Math.max(0, this.settings.energyPerRound - (this.energyUsed.get(u.id) ?? 0))
   }
 
-  startGame(u: User, game: unknown): GameSession {
-    if (game !== 'tap' && game !== 'reflex' && game !== 'stopwatch') throw new GameError('Juego desconocido')
+  /** Las canciones de esta noche (ranking, cola y lo que ha sonado): salen antes en la carátula pixelada. */
+  tracksTonight(): TrackInfo[] {
+    return [
+      ...[...this.requests.values()].map((r) => r.track),
+      ...this.history.map((h) => h.track),
+      ...(this.playback?.track ? [this.playback.track] : []),
+    ]
+  }
+
+  /** `pool`: canciones de reserva para montar las preguntas (solo en carátula y trivia). */
+  startGame(u: User, game: unknown, pool: TrackInfo[] = []): GameSession {
+    if (!GAME_IDS.includes(game as GameId)) throw new GameError('Juego desconocido')
+    const g = game as GameId
     const r = u.teamId ? this.requests.get(u.teamId) : undefined
     if (!r) throw new GameError('Primero pide una canción o únete a un equipo', 'NO_TEAM')
     if (this.frozen(r)) {
@@ -369,18 +416,51 @@ export class Engine {
       )
     }
     if (this.energyLeft(u) <= 0) throw new GameError('Sin energía: se recarga con la siguiente canción', 'NO_ENERGY')
+    let quiz: BuiltRound[] | undefined
+    if (g === 'cover' || g === 'trivia') {
+      const tonight = this.tracksTonight()
+      const entries = poolEntries([...tonight, ...pool])
+      const built =
+        g === 'cover' ? buildCoverQuiz(entries, new Set(poolEntries(tonight).map((e) => e.key))) : buildTriviaQuiz(entries)
+      if (!built) throw new GameError('Aún no hay canciones suficientes para este juego. Prueba otro', 'NO_POOL')
+      quiz = built
+    }
     this.energyUsed.set(u.id, (this.energyUsed.get(u.id) ?? 0) + 1)
     const s: Session = {
       id: id(8),
       userId: u.id,
-      game,
+      game: g,
       requestId: r.id,
       startsAt: Date.now() + GAME_COUNTDOWN_MS,
-      durationMs: GAME_DURATION[game],
+      durationMs: GAME_DURATION[g],
+      quiz,
+      answers: quiz ? [] : undefined,
     }
     this.sessions.set(s.id, s)
     this.onChange()
-    return { sessionId: s.id, game, requestId: r.id, startsAt: s.startsAt, durationMs: s.durationMs }
+    return {
+      sessionId: s.id,
+      game: g,
+      requestId: r.id,
+      startsAt: s.startsAt,
+      durationMs: s.durationMs,
+      quiz: quiz?.map((q) => q.round),
+    }
+  }
+
+  /** Contestar una ronda de carátula o trivia. Devuelve cuál era la buena para enseñarla. */
+  answerQuiz(u: User, sessionId: unknown, choiceRaw: unknown, msRaw: unknown): { correct: number; right: boolean } {
+    const s = typeof sessionId === 'string' ? this.sessions.get(sessionId) : undefined
+    if (!s || s.userId !== u.id || !s.quiz || !s.answers) throw new GameError('Partida no encontrada')
+    const q = s.quiz[s.answers.length]
+    if (!q) throw new GameError('Ya has contestado todo')
+    if (Date.now() < s.startsAt) throw new GameError('Aún no ha empezado')
+    const n = Number(choiceRaw)
+    const choice = Number.isInteger(n) && n >= 0 && n < q.round.options.length ? n : -1
+    // Menos de 250 ms no da ni para leer: se cuenta como 250
+    const ms = Math.round(Math.min(q.round.timeMs, Math.max(250, Number(msRaw) || q.round.timeMs)))
+    s.answers.push({ choice, ms })
+    return { correct: q.correct, right: choice === q.correct }
   }
 
   finishGame(u: User, sessionId: unknown, scoreRaw: unknown): GameResult {
@@ -419,6 +499,39 @@ export class Engine {
         shown = Math.round(Math.max(0, Math.min(Math.abs(score), 10_000)))
         base = shown <= 20 ? 10 : shown <= 60 ? 7 : shown <= 120 ? 5 : shown <= 250 ? 3 : shown <= 500 ? 1 : 0
         label = `a ${(shown / 1000).toFixed(2)} s del 10,00`
+        break
+      }
+      case 'memory': {
+        // Tiempo en ms para emparejar las 12 cartas (0 = no terminó)
+        const elapsed = now - s.startsAt
+        if (score > 0 && elapsed < 5_000) throw new GameError('Has terminado demasiado pronto')
+        shown = Math.round(Math.max(0, Math.min(score, s.durationMs)))
+        base = shown <= 0 ? 0 : shown <= 18_000 ? 4 : shown <= 25_000 ? 3 : shown <= 32_000 ? 2 : 1
+        label = shown > 0 ? `${(shown / 1000).toFixed(1).replace('.', ',')} s` : 'Sin terminar'
+        break
+      }
+      case 'rhythm': {
+        // Suma de los 18 círculos: 3 clavado, 2 bien, 1 justo
+        const elapsed = now - s.startsAt
+        if (elapsed < 11_000) throw new GameError('Has terminado demasiado pronto')
+        shown = Math.round(Math.max(0, Math.min(score, 54)))
+        base = shown >= 46 ? 5 : shown >= 38 ? 4 : shown >= 30 ? 3 : shown >= 22 ? 2 : shown >= 14 ? 1 : 0
+        label = `${shown} de 54 de ritmo`
+        break
+      }
+      case 'cover':
+      case 'trivia': {
+        const quiz = s.quiz ?? []
+        let hits = 0
+        for (const [i, a] of (s.answers ?? []).entries()) {
+          const q = quiz[i]
+          if (!q || a.choice !== q.correct) continue
+          hits++
+          // Carátula: 2 si la sacas antes de 3 s (aún muy pixelada); trivia: 1 por acierto
+          base += s.game === 'cover' ? (a.ms <= 3_000 ? 2 : 1) : 1
+        }
+        shown = hits
+        label = `${hits} de ${quiz.length} acertadas`
         break
       }
     }

@@ -354,3 +354,82 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - **Arreglo (`server/src/index.ts`, `admin:night`):** al cerrar, cada móvil conectado suelta su usuario, sale de su sala y recibe `session:expired`. El móvil borra su token y, al reabrir, pide alias nuevo. Los que tenían la pantalla apagada ya funcionaban bien: al reconectar, su token no existe y también se les pide alias.
 - Lo mismo al bloquear a alguien: ahora también sale de su sala.
 - **Prueba de humo ampliada:** al cerrar, cada móvil pierde su usuario; tras reabrir, Ana no puede jugar sin alias y vuelve a entrar con el mismo nombre. Todo OK.
+
+---
+
+## 11/11/2026 · Decisiones de Sergio y plan
+
+- **La cola de Spotify funciona** con música sonando (lo ha comprobado Sergio).
+- **Hosting:** se monta **directamente en Fly**; se descarta el túnel de Cloudflare.
+- **El repositorio ya está en GitHub** (`chenifero/juego_canciones`), subido por Sergio. Primer commit: `6f30d9a`.
+- **Orden:**
+  1. Funciones nuevas (selfie en el VS y más minijuegos).
+  2. Limpieza técnica.
+  3. Desplegar en Fly.
+
+## 11/11/2026 · Selfie en el VS y cuatro minijuegos nuevos
+
+### Selfie
+- Es **opcional**. En la entrada, la cara que hay junto al nombre se toca para abrir la cámara frontal. Después se puede poner, cambiar o quitar desde el chip del alias («Tu cara»). En tu propia canción aparece el botón «Pon tu cara en el VS».
+- El móvil recorta la foto al cuadrado del centro y la deja en **320×320 JPEG** (unos 25 KB). El servidor solo acepta un JPEG de verdad (con la cabecera correcta) de menos de 120 KB, como mucho una foto cada 3 s.
+- Se guarda en `data/fotos/<usuario>.jpg` y se sirve en `/api/fotos/...?v=N`.
+- **Se borran todas al cerrar la noche.** Al bloquear a alguien también se borra la suya. La dueña puede quitar cualquier foto desde el cajón **Gente**.
+- **Dónde sale:**
+  - En el **VS**: la cara de quien pidió la canción crece a 68 px.
+  - En las burbujas del equipo, en el peldaño del ranking, en SUENA, en la ganadora y en el panel.
+  - Sin foto, sale el emoji de siempre (componente `Avatar`).
+
+### Minijuegos (ahora son 7)
+
+| Juego | Cómo se juega | Puntos (máx.) |
+|---|---|---|
+| **Memoria** | 12 cartas (6 parejas de botica y barra) en 40 s | ≤18 s: 4 · ≤25 s: 3 · ≤32 s: 2 · terminada: 1 |
+| **Al ritmo** | 18 círculos; tocarlos cuando el aro ámbar encaja. El ritmo se ve en las bombillas | Clavado 3 / bien 2 / justo 1 por círculo; de 54: ≥46: 5 … ≥14: 1 |
+| **Carátula** | 3 carátulas que empiezan pixeladas y se aclaran en 7 s; 4 opciones | 2 si aciertas antes de 3 s, 1 si después (máx. 6) |
+| **Trivia** | 5 preguntas («¿Quién canta…?» y «¿Cuál es de…?»); 8 s cada una | 1 por acierto (máx. 5) |
+
+- **Carátula y Trivia sin trampas:**
+  - Las preguntas las monta el servidor (`server/src/quiz.ts`) y la respuesta buena nunca llega al móvil.
+  - Cada respuesta se manda con `game:answer` y el servidor dice cuál era la buena para enseñarla.
+  - Los puntos los cuenta él, sin fiarse de lo que mande el móvil.
+- **De dónde salen las canciones de las preguntas:**
+  - Primero las de esta noche: ranking, cola y lo que ha sonado.
+  - Luego lo que se ha buscado.
+  - Si aún hay poco, el servidor hace 12 búsquedas de reserva (Hombres G, Estopa, Mecano…) una vez por hora.
+  - En el simulador se usa todo su catálogo.
+- **Selector:** rejilla de 3 columnas con los 6 juegos y el **Crono a ciegas** a todo lo ancho, como el premio gordo de la máquina.
+- **La pantalla de juego** se limita a la columna de la máquina (`max-w-lg`), también en escritorio.
+- **Comprobado en el navegador con el simulador:**
+  - Memoria (hasta que se acaba el tiempo).
+  - Al ritmo.
+  - Carátula: acierto rápido → +2.
+  - Trivia.
+  - El VS con selfies.
+  - Corregido de paso: los rótulos «Fuera/¡Clavado!» de Al ritmo ahora se desvanecen solos, y la cara del VS ya no roza los puntos.
+- **Prueba de humo ampliada** (79 comprobaciones), todo OK:
+  - Que la respuesta buena no viaja al móvil.
+  - Que no se puede contestar en la cuenta atrás ni de más.
+  - Que sin aciertos no suma aunque el móvil mande 99.
+  - Que se rechaza la memoria terminada en 1 s.
+  - Selfie: rechazo de no-JPEG, la foto se ve, sale en el ranking, la dueña la quita y se borra al cerrar.
+- **Revisión final de Impeccable** (revisor independiente, solo código): **«fix»**, con 8 arreglos. Están todos aplicados:
+  1. El metrónomo de Al ritmo marcaba a contratiempo. Ahora el paso cae en el golpe.
+  2. Con movimiento reducido, las bombillas del metrónomo destellan juntas en vez de correr.
+  3. La ronda de Carátula y Trivia va en LED (Regla del Contador).
+  4. Al revelar, la buena va en **ámbar** y no en cian: cian y rosa juntos son el VS (Regla del Rosa Rival). Además, DESIGN.md añade «fallo en un minijuego» a los usos del rosa como alarma.
+  5. El dorso de la memoria lleva la cruz de la botica, no la pastilla (que es uno de los símbolos).
+  6. El LED del tiempo late en rosa en la recta final.
+  7. La pregunta de la trivia va en bisel con cristal dentro.
+  8. Accesibilidad: cada carta dice su símbolo y el canvas lleva `role="img"`.
+- **Capturas a 390×844** (Chrome sin ventana manejado por DevTools, porque la extensión de Chrome se desconectó) en `web/.impeccable/review/juegos/` y las hojas `juegos-hoja1.jpg` y `juegos-hoja2.jpg`. Cubren:
+  - la entrada con selfie, la portada con caras, «Tu cara» y el selector;
+  - los 4 juegos, con su resultado;
+  - Carátula y Trivia reveladas;
+  - el VS con selfie.
+- **Retoques tras mirarlas:**
+  - El aro de Al ritmo ya no se corta contra el borde.
+  - La carátula es más grande (hasta 300 px) para no dejar hueco.
+  - El selfie del VS no pisa título ni puntos.
+- `DESIGN.md` gana las secciones **Cara (avatar)** y **Minijuegos**. `PRODUCT.md` recoge los 7 juegos y el selfie.
+- La revisión de diseño no se ha repetido después de los arreglos.
+- Tipos, build y `npm test` en verde.

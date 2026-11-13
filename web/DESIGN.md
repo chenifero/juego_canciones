@@ -169,7 +169,7 @@ Negro de mueble, cian de cristal, ámbar de bombilla y un rosa reservado al riva
 - **Tinta de serigrafía** (print): todo texto, icono y filete que va sobre cristal o sobre ámbar.
 
 ### Named Rules
-**La Regla del Rosa Rival.** El rosa es del rival del duelo. Fuera del duelo solo aparece como alarma (tiempo agotándose, error, cerrado); nunca como decoración ni como segundo acento.
+**La Regla del Rosa Rival.** El rosa es del rival del duelo. Fuera del duelo solo aparece como alarma (tiempo agotándose, error, cerrado, fallo en un minijuego); nunca como decoración ni como segundo acento. Por eso, al revelar una respuesta, la buena se enciende en ámbar (premio) y no en cian: cian y rosa juntos son el VS.
 
 **La Regla de la Tinta.** Sobre cristal encendido o sobre ámbar, el texto es `print`. El texto claro solo vive sobre negro o sobre cristal apagado.
 
@@ -268,6 +268,16 @@ Un trazo a mano de 3px en `paper` que rodea tu canción y se dibuja una sola vez
 
 ### Avisos
 Tiras de color con letra impresa que caen desde arriba: ámbar (bien), rosa (error), papel (información). Archivo 800 15px, tinta `print`, como mucho tres a la vez.
+
+### Cara (avatar)
+Redonda, como lo único redondo de la máquina además de bombillas y pulsadores de juego. Muestra el selfie si lo hay y, si no, el emoji sobre `panel-2`. Va separada de lo que tiene debajo por un filete de 2-4px (`ink` sobre negro, `print` sobre cristal). En el VS, la cara de quien pidió la canción crece de 44 a 68px y monta sobre la esquina de la carátula: es la cara de la canción. El selfie es opcional (se toca la cara al entrar o el chip del alias, cajón «Tu cara») y se borra al cerrar la noche.
+
+### Minijuegos
+Pantalla completa sobre `ink`, limitada a la columna de la máquina (`max-w-lg`). Arriba, siempre la misma tira: a la izquierda la ventanilla LED del tiempo (rosa y latiendo en la recta final) y a la derecha el progreso en bombillas (parejas, aciertos, golpes). El tablero de juego es un bisel con cristal apagado dentro.
+- **Selector:** rejilla de pulsadores ámbar de 3 columnas (icono, nombre en Bungee, puntos máximos en LED y dificultad en 3 bombillas). El último juego, el más difícil, ocupa toda la fila: es el premio gordo.
+- **Cartas (Memoria):** dorso de cristal apagado con la cruz de la botica; al destaparla, ámbar con el símbolo en tinta; pareja hecha, cristal encendido; fallo, rosa.
+- **Aro (Al ritmo):** círculo de cristal encendido con su número y un aro ámbar que se cierra sobre él. El ritmo se ve en una hilera de 6 bombillas: la luz avanza una en cada golpe (con movimiento reducido, destellan todas juntas). Nada depende del sonido.
+- **Respuestas (Carátula y Trivia):** pulsadores anchos en `panel-2` con título en Archivo 850 y subtítulo en `mute`. Al revelar: la buena en ámbar, la elegida si falla en rosa, el resto al 45 %. La carátula se pixela en un canvas dentro de un bisel y lleva el sello «Vale doble» mientras aún puntúa doble. La ronda va en una ventanilla LED pequeña.
 
 ### Mando de la dueña (`/admin`)
 

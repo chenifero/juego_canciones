@@ -15,6 +15,8 @@ export interface PublicUser {
   id: string
   alias: string
   emoji: string
+  /** URL del selfie (se borra al cerrar la noche). Sin foto, se usa el emoji. */
+  photo?: string
 }
 
 /** Fases de una ronda (la ronda es la canción que está sonando). */
@@ -117,7 +119,23 @@ export interface AdminState {
   spotifyAccount: string | null
 }
 
-export type GameId = 'tap' | 'reflex' | 'stopwatch'
+export type GameId = 'tap' | 'reflex' | 'memory' | 'rhythm' | 'cover' | 'trivia' | 'stopwatch'
+
+/** Una pregunta de los juegos de acertar (carátula y trivia). La respuesta buena solo la sabe el servidor. */
+export interface QuizRound {
+  prompt: string
+  /** Carátula que se va despixelando (solo en «cover»). */
+  cover?: string
+  options: { title: string; sub?: string }[]
+  /** Tiempo para contestar. */
+  timeMs: number
+}
+
+/** Respuesta a una ronda: opción elegida (-1 si se acabó el tiempo) y cuánto tardó. */
+export interface QuizAnswer {
+  choice: number
+  ms: number
+}
 
 export interface GameSession {
   sessionId: string
@@ -125,6 +143,7 @@ export interface GameSession {
   requestId: string
   startsAt: number
   durationMs: number
+  quiz?: QuizRound[]
 }
 
 export interface GameResult {

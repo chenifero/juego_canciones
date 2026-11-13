@@ -3,9 +3,10 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 import type { MeState, PublicState, PublicUser, SongRequest } from '../../../shared/types.ts'
 import { cx } from '../lib/util.ts'
+import { Avatar } from './Avatar.tsx'
 import { Led, MarkerCircle } from './machine.tsx'
 
-/** Avatares del equipo (emoji elegido por cada cliente). */
+/** Caras del equipo: el selfie de cada cliente o, si no tiene, su emoji. */
 export function TeamBubbles({ by, team, total, size = 22 }: { by?: PublicUser; team: PublicUser[]; total: number; size?: number }) {
   const shown = [...(by ? [by] : []), ...team].slice(0, 5)
   const extra = total - shown.length
@@ -17,11 +18,9 @@ export function TeamBubbles({ by, team, total, size = 22 }: { by?: PublicUser; t
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 500, damping: 22, delay: i * 0.03 }}
-          title={u.alias}
-          className="-ml-1.5 grid place-items-center rounded-full border-2 border-ink bg-panel-2 first:ml-0"
-          style={{ width: size, height: size, fontSize: size * 0.55 }}
+          className="-ml-1.5 first:ml-0"
         >
-          {u.emoji}
+          <Avatar user={u} size={size} className="border-2" />
         </motion.span>
       ))}
       {extra > 0 && <span className="ml-1 text-[12px] font-bold text-mute">+{extra}</span>}
@@ -117,12 +116,7 @@ function Rung({
           </span>
           <span className="relative shrink-0">
             <img src={r.track.cover} alt="" loading="lazy" className="size-[52px] rounded-[3px] object-cover ring-2 ring-print/70" />
-            <span
-              className="absolute -bottom-1.5 -right-1.5 grid size-6 place-items-center rounded-full border-2 border-ink bg-panel-2 text-[13px]"
-              title={r.by.alias}
-            >
-              {r.by.emoji}
-            </span>
+            <Avatar user={r.by} size={24} className="absolute -bottom-1.5 -right-1.5 border-2" />
           </span>
           <span className={cx('min-w-0 flex-1 pl-1', onGlass ? 'text-print' : 'text-paper')}>
             <span className="line-clamp-2 text-[16px] font-[800] leading-[1.1] [font-stretch:88%]">{r.track.title}</span>

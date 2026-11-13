@@ -4,6 +4,7 @@ import type { MeState, PublicState, SongRequest } from '../../../shared/types.ts
 import { useServerNow } from '../lib/store.ts'
 import { cx, fmtTime } from '../lib/util.ts'
 import { Bulbs, Led, Stamp } from './machine.tsx'
+import { Avatar } from './Avatar.tsx'
 import { TeamBubbles } from './Ranking.tsx'
 
 export function getDuel(state: PublicState): { a: SongRequest; b: SongRequest } | null {
@@ -33,12 +34,17 @@ function Side({ r, side, me }: { r: SongRequest; side: 'a' | 'b'; me: MeState | 
             isA ? '-rotate-2' : 'rotate-2',
           )}
         />
-        <span
-          className={cx('absolute -bottom-3 grid size-11 place-items-center rounded-full border-4 border-print bg-paper text-[22px]', isA ? '-right-3' : '-left-3')}
-          aria-hidden
-        >
-          {r.by.emoji}
-        </span>
+        {/* Con selfie, la cara de quien la pidió crece: es la cara de la canción en el VS */}
+        <Avatar
+          user={r.by}
+          size={r.by.photo ? 68 : 44}
+          ring="border-print"
+          className={cx(
+            'absolute border-4',
+            r.by.photo ? '-bottom-5' : '-bottom-3 bg-paper',
+            isA ? (r.by.photo ? '-right-2' : '-right-3') : r.by.photo ? '-left-2' : '-left-3',
+          )}
+        />
       </div>
       <div className="min-w-0 flex-1">
         {(mine || team) && (

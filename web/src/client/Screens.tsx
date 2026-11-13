@@ -1,7 +1,10 @@
+import { Camera } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
 import { useState } from 'react'
+import { SelfieInput } from '../components/Avatar.tsx'
 import { Bulbs, Stamp } from '../components/machine.tsx'
 import { toast } from '../components/Toasts.tsx'
+import { uploadSelfie } from '../lib/photo.ts'
 import { emit, session } from '../lib/socket.ts'
 import { EMOJIS, cx, vibrate } from '../lib/util.ts'
 
@@ -41,6 +44,7 @@ export function Closed() {
 export function Join({ banned }: { banned: boolean }) {
   const [alias, setAlias] = useState('')
   const [emoji, setEmoji] = useState(() => EMOJIS[Math.floor(Math.random() * EMOJIS.length)]!)
+  const [photo, setPhoto] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
   const valid = alias.trim().length >= 2
 
@@ -52,6 +56,8 @@ export function Join({ banned }: { banned: boolean }) {
       const r = await emit<{ token: string }>('join', { alias: alias.trim(), emoji })
       session.setToken(r.token)
       vibrate([20, 30, 40])
+      // El selfie es opcional: si no sube, entra igual con su emoji
+      if (photo) uploadSelfie(photo).catch(() => toast('No se pudo subir la foto. Prueba desde tu cara, arriba', 'error', 4500))
     } catch (err) {
       toast((err as Error).message, 'error')
     } finally {
@@ -95,9 +101,16 @@ export function Join({ banned }: { banned: boolean }) {
             Tu nombre en el bar
           </label>
           <div className="mt-2 flex items-center gap-3">
-            <span className="grid size-14 shrink-0 place-items-center rounded-machine bg-panel-2 text-[28px]" aria-hidden>
-              {emoji}
-            </span>
+            <SelfieInput
+              onPhoto={setPhoto}
+              label={photo ? 'Repetir el selfie' : 'Hacerte un selfie (opcional)'}
+              className="relative grid size-14 shrink-0 place-items-center overflow-hidden rounded-full bg-panel-2 text-[28px] active:scale-95"
+            >
+              {photo ? <img src={photo} alt="" className="size-full object-cover" /> : <span aria-hidden>{emoji}</span>}
+              <span className="absolute bottom-0 right-0 grid size-5 place-items-center rounded-full bg-cyan text-print" aria-hidden>
+                <Camera size={12} weight="fill" />
+              </span>
+            </SelfieInput>
             <input
               id="alias"
               value={alias}
@@ -109,18 +122,21 @@ export function Join({ banned }: { banned: boolean }) {
             />
           </div>
           <fieldset className="mt-3">
-            <legend className="sr-only">Elige tu cara</legend>
+            <legend className="sr-only">Elige tu emoji</legend>
             <div className="grid grid-cols-8 gap-1.5">
               {EMOJIS.map((e) => (
                 <button
                   type="button"
                   key={e}
-                  onClick={() => setEmoji(e)}
+                  onClick={() => {
+                    setEmoji(e)
+                    setPhoto(null)
+                  }}
                   aria-label={`Avatar ${e}`}
-                  aria-pressed={e === emoji}
+                  aria-pressed={!photo && e === emoji}
                   className={cx(
                     'grid aspect-square place-items-center rounded-[4px] text-[20px] transition-transform',
-                    e === emoji ? 'glass scale-110' : 'bg-panel-2 active:scale-90',
+                    !photo && e === emoji ? 'glass scale-110' : 'bg-panel-2 active:scale-90',
                   )}
                 >
                   {e}
@@ -128,6 +144,7 @@ export function Join({ banned }: { banned: boolean }) {
               ))}
             </div>
           </fieldset>
+          <p className="mt-2.5 text-[13px] text-mute">Toca la cara para salir con selfie en el VS. Se borra al cerrar.</p>
           <button
             disabled={!valid || sending}
             className={cx('pulsador glass mt-4 h-16 w-full font-display text-[20px] [--pulsador-glow:rgb(25_195_255/0.55)]', valid && !sending && 'animate-breathe')}

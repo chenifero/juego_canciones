@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import type { PublicState } from '../../../shared/types.ts'
 import { progressAt, useServerNow } from '../lib/store.ts'
 import { cx, fmtTime } from '../lib/util.ts'
+import { Avatar } from './Avatar.tsx'
 import { Led, Stamp } from './machine.tsx'
 
 const IDLE_TEXT: Record<string, string> = {
@@ -89,8 +90,9 @@ export function NowPlaying({ state, duelShownElsewhere = false }: { state: Publi
                 </h2>
                 {track && <p className="mt-0.5 truncate text-[14px] font-semibold text-print/70">{track.artist}</p>}
                 {state.now.requestedBy && (
-                  <p className="mt-1 truncate text-[13px] font-bold">
-                    <span aria-hidden>{state.now.requestedBy.emoji}</span> {state.now.requestedBy.alias}
+                  <p className="mt-1 flex items-center gap-1.5 text-[13px] font-bold">
+                    <Avatar user={state.now.requestedBy} size={20} ring="border-print/40" className="border" />
+                    <span className="truncate">{state.now.requestedBy.alias}</span>
                   </p>
                 )}
               </motion.div>
