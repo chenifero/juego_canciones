@@ -433,3 +433,13 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - `DESIGN.md` gana las secciones **Cara (avatar)** y **Minijuegos**. `PRODUCT.md` recoge los 7 juegos y el selfie.
 - La revisión de diseño no se ha repetido después de los arreglos.
 - Tipos, build y `npm test` en verde.
+
+## 13/11/2026 · Commit y cartel nuevo
+
+- **Commit `76a2df1`:** selfie en el VS y los 4 minijuegos nuevos (27 archivos).
+- **Cartel `/cartel` rediseñado** como el frontal de la máquina, según `DESIGN.md`:
+  - Bisel de metal con hileras de bombillas arriba y abajo, logo, cristal cian con «¡TÚ PONES LA MÚSICA!» en tinta y QR sobre placa de papel con el logo en el centro.
+  - Tres pasos en cristal apagado con su número en LED y tira ámbar con «Pide tu dosis en la barra».
+  - Fuera los emojis, el verde y la cruz LED. La dirección web va en Archivo (el LED solo para cifras).
+  - Comprobado en pantalla a 600 px de ancho (cabe entero en proporción A3). **Falta** probar la impresión real y que el QR se lea desde el móvil.
+- Siguiente: limpieza técnica y desplegar en Fly.
