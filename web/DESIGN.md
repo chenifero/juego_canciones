@@ -162,7 +162,7 @@ Negro de mueble, cian de cristal, ámbar de bombilla y un rosa reservado al riva
 ### Neutral
 - **Mueble** (ink): fondo de toda la pantalla y fondo de los pulsadores de voto.
 - **Noche** (night): fondo de los cajones (sheets).
-- **Panel** (panel) y **Panel 2** (panel-2): superficies sin luz dentro del mueble (chip del alias, botón cerrar, avatares emoji).
+- **Panel** (panel) y **Panel 2** (panel-2): superficies sin luz dentro del mueble (chip del alias, botón cerrar, avatares sin foto).
 - **Línea** (line): divisores entre filas de resultados.
 - **Gris rótulo** (mute): texto secundario sobre negro.
 - **Papel** (paper): texto principal sobre negro, campos de texto y avisos informativos.
@@ -222,7 +222,7 @@ La profundidad es de objeto físico, no de capas flotantes. Casi todas las sombr
 
 ## Shapes
 
-Esquinas de máquina: casi rectas. Los marcos, pulsadores, campos y avisos usan 6px (`machine`); los cristales y ventanillas dentro de un marco, 4px; carátulas y sellos, 3px. El único radio grande es el canto superior del cajón (14px). Lo redondo es solo lo que es redondo en una máquina real: bombillas, avatares emoji y los pulsadores circulares de los minijuegos.
+Esquinas de máquina: casi rectas. Los marcos, pulsadores, campos y avisos usan 6px (`machine`); los cristales y ventanillas dentro de un marco, 4px; carátulas y sellos, 3px. El único radio grande es el canto superior del cajón (14px). Lo redondo es solo lo que es redondo en una máquina real: bombillas, avatares y los pulsadores circulares de los minijuegos.
 
 Los marcos se construyen anidando: bisel con 3px de relleno, cristal dentro con 4px de radio. Los peldaños se separan con un filete de tinta (`print` al 60 %), no con hueco. El círculo de rotulador es la única línea irregular del sistema.
 
@@ -270,7 +270,7 @@ Un trazo a mano de 3px en `paper` que rodea tu canción y se dibuja una sola vez
 Tiras de color con letra impresa que caen desde arriba: ámbar (bien), rosa (error), papel (información). Archivo 800 15px, tinta `print`, como mucho tres a la vez.
 
 ### Cara (avatar)
-Redonda, como lo único redondo de la máquina además de bombillas y pulsadores de juego. Muestra el selfie si lo hay y, si no, el emoji sobre `panel-2`. Va separada de lo que tiene debajo por un filete de 2-4px (`ink` sobre negro, `print` sobre cristal). En el VS, la cara de quien pidió la canción crece de 44 a 68px y monta sobre la esquina de la carátula: es la cara de la canción. El selfie es opcional (se toca la cara al entrar o el chip del alias, cajón «Tu cara») y se borra al cerrar la noche.
+Redonda, como lo único redondo de la máquina además de bombillas y pulsadores de juego. Muestra el selfie si lo hay y, si no, la inicial del nombre (Bungee, cian) sobre `panel-2`. Va separada de lo que tiene debajo por un filete de 2-4px (`ink` sobre negro, `print` sobre cristal). En el VS, la cara de quien pidió la canción crece de 44 a 68px y monta sobre la esquina de la carátula: es la cara de la canción. El selfie es opcional (se toca la cara al entrar o el chip del alias, cajón «Tu cara») y se borra al cerrar la noche.
 
 ### Minijuegos
 Pantalla completa sobre `ink`, limitada a la columna de la máquina (`max-w-lg`). Arriba, siempre la misma tira: a la izquierda la ventanilla LED del tiempo (rosa y latiendo en la recta final) y a la derecha el progreso en bombillas (parejas, aciertos, golpes). El tablero de juego es un bisel con cristal apagado dentro.

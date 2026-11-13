@@ -478,7 +478,7 @@ function RankingDrawer({ open, onClose, state, admin, act }: { open: boolean; on
                 <div className="min-w-0 flex-1">
                   <p className="line-clamp-2 text-[15px] font-[800] leading-tight [font-stretch:90%]">{r.track.title}</p>
                   <p className="truncate text-[13px] text-paper/65">
-                    {r.by.emoji} {r.by.alias}
+                    {r.by.alias}
                   </p>
                 </div>
                 <span className="led-well rounded-[4px] px-1.5 py-1">
@@ -508,7 +508,7 @@ function RankingDrawer({ open, onClose, state, admin, act }: { open: boolean; on
                   {new Date(h.playedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                 </span>
                 <span className="min-w-0 flex-1 truncate font-semibold">{h.track.title}</span>
-                <span className="shrink-0 text-[13px] text-mute">{h.by ? `${h.by.emoji} ${h.by.alias}` : 'Lista del bar'}</span>
+                <span className="shrink-0 text-[13px] text-mute">{h.by ? h.by.alias : 'Lista del bar'}</span>
               </li>
             ))}
           </ul>

@@ -460,3 +460,10 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - **Problema:** la perdedora de un duelo conservaba solo el 50 % de sus puntos (p. ej. 16 → 8) y una canción nueva entra con 10, así que se colaba por delante de la que casi suena.
 - **Arreglo:** en `lock()` (`server/src/engine.ts`) la perdedora queda con `max(basePoints, mitad)`: nunca por debajo de una canción nueva.
 - La prueba de humo ya cubre el caso (16 → 10). Tipos y `npm test` en verde.
+
+## 13/11/2026 · Bombilla del ranking y entrada sin emojis
+
+- **Ranking:** la bombilla del peldaño iba pegada al borde izquierdo del cristal. La columna pasa de 24 a 40 px (también en la escalera vacía).
+- **Entrada:** fuera los emojis. Arriba, un **selfie grande** (círculo de 128 px con cámara y un «+»); debajo, el nombre. Quien no quiera foto entra solo con el nombre.
+- **Sin foto:** la cara muestra la **inicial del nombre** (Bungee, cian) en lugar del emoji.
+- **Limpieza:** el campo `emoji` desaparece del servidor, de los tipos compartidos, del panel de la dueña y de la prueba de humo. `npm test` y tipos en verde.

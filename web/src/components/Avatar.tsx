@@ -6,14 +6,19 @@ import { cx, vibrate } from '../lib/util.ts'
 import { Sheet } from './Sheet.tsx'
 import { toast } from './Toasts.tsx'
 
-/** Cara redonda: el selfie si lo hay; si no, su emoji sobre metal. */
+/** Primera letra del alias, en mayúscula. */
+function initial(alias: string): string {
+  return ([...alias.trim()][0] ?? '?').toUpperCase()
+}
+
+/** Cara redonda: el selfie si lo hay; si no, la inicial de su nombre sobre metal. */
 export function Avatar({
   user,
   size,
   className = '',
   ring = 'border-ink',
 }: {
-  user: Pick<PublicUser, 'emoji' | 'photo' | 'alias'>
+  user: Pick<PublicUser, 'photo' | 'alias'>
   size: number
   className?: string
   /** Color del filete que la separa de lo que tiene debajo. */
@@ -22,13 +27,13 @@ export function Avatar({
   return (
     <span
       title={user.alias}
-      className={cx('grid shrink-0 place-items-center overflow-hidden rounded-full bg-panel-2', ring, className)}
-      style={{ width: size, height: size, fontSize: size * 0.55 }}
+      className={cx('grid shrink-0 place-items-center overflow-hidden rounded-full bg-panel-2 font-display leading-none text-cyan', ring, className)}
+      style={{ width: size, height: size, fontSize: size * 0.48 }}
     >
       {user.photo ? (
         <img src={user.photo} alt="" className="size-full object-cover" draggable={false} />
       ) : (
-        <span aria-hidden>{user.emoji}</span>
+        <span aria-hidden>{initial(user.alias)}</span>
       )}
     </span>
   )
@@ -90,7 +95,7 @@ export function FaceSheet({ open, onClose, user }: { open: boolean; onClose: () 
   async function remove() {
     try {
       await removeSelfie()
-      toast('Foto quitada. Vuelves a ser ' + user.emoji, 'info')
+      toast('Foto quitada', 'info')
     } catch (err) {
       toast((err as Error).message, 'error')
     }

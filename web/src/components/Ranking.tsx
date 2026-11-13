@@ -6,7 +6,7 @@ import { cx } from '../lib/util.ts'
 import { Avatar } from './Avatar.tsx'
 import { Led, MarkerCircle } from './machine.tsx'
 
-/** Caras del equipo: el selfie de cada cliente o, si no tiene, su emoji. */
+/** Caras del equipo: el selfie de cada cliente o, si no tiene, la inicial de su nombre. */
 export function TeamBubbles({ by, team, total, size = 22 }: { by?: PublicUser; team: PublicUser[]; total: number; size?: number }) {
   const shown = [...(by ? [by] : []), ...team].slice(0, 5)
   const extra = total - shown.length
@@ -31,7 +31,7 @@ export function TeamBubbles({ by, team, total, size = 22 }: { by?: PublicUser; t
 /** Bombilla del peldaño. Destella cuando la canción suma. */
 function RungLamp({ on, flash }: { on: boolean; flash: number }) {
   return (
-    <span className="relative grid w-6 shrink-0 place-items-center self-stretch border-r border-print/50">
+    <span className="relative grid w-10 shrink-0 place-items-center self-stretch border-r border-print/50">
       <span className={cx('size-3.5', on ? 'bulb-on' : 'bulb')} />
       {flash > 0 && (
         <motion.span
@@ -171,7 +171,7 @@ export function Ranking({
           <ol className="overflow-hidden rounded-[4px]" aria-label="Ranking vacío">
             {[1, 2, 3].map((n) => (
               <li key={n} className="glass-dim flex h-[64px] items-center border-b border-print/60 last:border-b-0">
-                <span className="grid w-7 place-items-center self-stretch border-r border-print/50">
+                <span className="grid w-10 place-items-center self-stretch border-r border-print/50">
                   <span className="bulb size-3.5" />
                 </span>
                 <span className="w-9 text-center font-display text-[22px] text-cyan/50">{n}</span>

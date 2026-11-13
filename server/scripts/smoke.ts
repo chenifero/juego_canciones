@@ -92,10 +92,10 @@ async function main() {
   const carlos = client({ deviceId: 'dev-carlos' })
   await sleep(300)
 
-  await ok(ana.emit('join', { alias: 'Ana', emoji: '🦊' }), 'Ana entra')
-  await ok(bea.emit('join', { alias: 'Bea', emoji: '🐸' }), 'Bea entra')
-  await ok(carlos.emit('join', { alias: 'Carlos', emoji: '🐙' }), 'Carlos entra')
-  const dupAlias = await client({ deviceId: 'otro' }).emit('join', { alias: 'ana', emoji: '🐙' })
+  await ok(ana.emit('join', { alias: 'Ana' }), 'Ana entra')
+  await ok(bea.emit('join', { alias: 'Bea' }), 'Bea entra')
+  await ok(carlos.emit('join', { alias: 'Carlos' }), 'Carlos entra')
+  const dupAlias = await client({ deviceId: 'otro' }).emit('join', { alias: 'ana' })
   check(!dupAlias.ok, 'Alias repetido rechazado')
 
   const r1 = await ok<TrackInfo[]>(ana.emit('search', { q: 'hombres' }), 'Ana busca "hombres"')
@@ -160,7 +160,7 @@ async function main() {
     'Su canción sale con su cara en el ranking',
   )
   await ok(boss.emit('admin:photo', { adminToken, userId: beaId }), 'La dueña quita la foto de Bea')
-  check(await waitFor(() => !ana.state?.ranking.find((r) => r.id === reqB.id)?.by.photo), 'Bea vuelve a salir con su emoji')
+  check(await waitFor(() => !ana.state?.ranking.find((r) => r.id === reqB.id)?.by.photo), 'Bea vuelve a salir sin foto')
   await sleep(3_100)
   await ok(bea.emit('photo:set', { data: jpeg }), 'Bea se hace otro (se borrará al cerrar)')
 
@@ -223,19 +223,19 @@ async function main() {
   carlos.socket.on('session:expired', () => (kicked = true))
   await ok(boss.emit('admin:ban', { adminToken, userId: carlosId }), 'La dueña bloquea a Carlos')
   check(await waitFor(() => kicked, 3000), 'A Carlos le cierra la sesión')
-  const back = await carlos.emit('join', { alias: 'Carlitos', emoji: '🐙' })
+  const back = await carlos.emit('join', { alias: 'Carlitos' })
   check(!back.ok, 'Carlos no puede volver a entrar con otro alias')
 
   await ok(boss.emit('admin:night', { adminToken, open: false }), 'La dueña cierra la noche')
   check(await waitFor(() => ana.state?.open === false && ana.state.ranking.length === 0), 'Todo borrado y bar cerrado')
-  const late = await client({ deviceId: 'x' }).emit('join', { alias: 'Tarde', emoji: '🌙' })
+  const late = await client({ deviceId: 'x' }).emit('join', { alias: 'Tarde' })
   check(!late.ok, 'Con el bar cerrado no se puede entrar')
   check(await waitFor(() => ana.expired && bea.expired && carlos.me === null), 'Al cerrar, cada móvil pierde su usuario')
   check(!(await fetch(`${URL}/api/fotos/${beaId}.jpg`)).ok, 'Al cerrar, los selfies se borran')
   await ok(boss.emit('admin:night', { adminToken, open: true }), 'La dueña reabre la noche enseguida')
   const stale = await ana.emit('search', { q: 'hombres' })
   check(!stale.ok && stale.code === 'NO_SESSION', 'Ana tiene que volver a poner alias para jugar')
-  await ok(ana.emit('join', { alias: 'Ana', emoji: '🎸' }), 'Ana entra de nuevo con alias (el de anoche está libre)')
+  await ok(ana.emit('join', { alias: 'Ana' }), 'Ana entra de nuevo con alias (el de anoche está libre)')
 }
 
 main()

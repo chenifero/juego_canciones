@@ -25,7 +25,7 @@ No es una jukebox de cola: es una competición en directo. La canción que suena
 - Se entra por un QR fijo en un cartel A3. No hay tele en el bar: todo se ve en los móviles.
 - Cada noche es una sesión que abre y cierra la dueña; al cerrarla se borra todo.
 - Música muy alta: nada puede depender del sonido.
-- Sin registro: solo un alias y un emoji (y, si quiere, un selfie que se borra al cerrar la noche).
+- Sin registro: solo un alias (y, si quiere, un selfie que se borra al cerrar la noche).
 
 ## Capabilities and Constraints
 

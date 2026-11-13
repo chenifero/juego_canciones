@@ -53,7 +53,6 @@ interface User {
   token: string
   deviceId: string
   alias: string
-  emoji: string
   joinedAt: number
   requestTimes: number[]
   lastPlayedAt: number
@@ -186,7 +185,7 @@ export class Engine {
 
   private pub(u: User | undefined): PublicUser | null {
     if (!u) return null
-    const base = { id: u.id, alias: u.alias, emoji: u.emoji }
+    const base = { id: u.id, alias: u.alias }
     return u.photoV ? { ...base, photo: `/api/fotos/${u.id}.jpg?v=${u.photoV}` } : base
   }
 
@@ -220,7 +219,7 @@ export class Engine {
     return this.bannedDevices.has(deviceId)
   }
 
-  join(aliasRaw: unknown, emojiRaw: unknown, deviceIdRaw: unknown): { token: string; user: PublicUser } {
+  join(aliasRaw: unknown, deviceIdRaw: unknown): { token: string; user: PublicUser } {
     if (!this.open) throw new GameError('La Barmacia está cerrada ahora mismo', 'CLOSED')
     const deviceId = typeof deviceIdRaw === 'string' ? deviceIdRaw.slice(0, 64) : ''
     if (deviceId && this.bannedDevices.has(deviceId)) throw new GameError('No puedes jugar esta noche', 'BANNED')
@@ -233,13 +232,11 @@ export class Engine {
       (u) => u.alias.toLowerCase() === alias.toLowerCase() && u.deviceId !== deviceId,
     )
     if (taken) throw new GameError('Ese alias ya está pillado esta noche', 'ALIAS_TAKEN')
-    const emoji = typeof emojiRaw === 'string' && emojiRaw.length > 0 && emojiRaw.length <= 8 ? emojiRaw : '🎵'
 
     // Mismo móvil que vuelve a entrar → se recupera su usuario
     const existing = deviceId ? [...this.users.values()].find((u) => u.deviceId === deviceId) : undefined
     if (existing) {
       existing.alias = alias
-      existing.emoji = emoji
       this.onChange()
       return { token: existing.token, user: this.pub(existing)! }
     }
@@ -248,7 +245,6 @@ export class Engine {
       token: id(24),
       deviceId: deviceId || id(8),
       alias,
-      emoji,
       joinedAt: Date.now(),
       requestTimes: [],
       lastPlayedAt: 0,
@@ -276,7 +272,7 @@ export class Engine {
     return {
       id: r.id,
       track: r.track,
-      by: this.pub(this.users.get(r.userId)) ?? { id: '?', alias: 'Alguien', emoji: '🎵' },
+      by: this.pub(this.users.get(r.userId)) ?? { id: '?', alias: 'Alguien' },
       points: r.points,
       supporters: r.supporters.length,
       team: r.supporters

@@ -242,7 +242,7 @@ io.on('connection', (socket) => {
 
   // ── clientes ──
   on(socket, 'join', (p) => {
-    const res = engine.join(p.alias, p.emoji, deviceId)
+    const res = engine.join(p.alias, deviceId)
     bindUser(res.token)
     broadcast()
     return res

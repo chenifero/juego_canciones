@@ -21,8 +21,7 @@ export interface AlbumInfo {
 export interface PublicUser {
   id: string
   alias: string
-  emoji: string
-  /** URL del selfie (se borra al cerrar la noche). Sin foto, se usa el emoji. */
+  /** URL del selfie (se borra al cerrar la noche). Sin foto, se usa la inicial del alias. */
   photo?: string
 }
 

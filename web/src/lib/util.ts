@@ -17,8 +17,6 @@ export function cx(...parts: (string | false | null | undefined)[]): string {
   return parts.filter(Boolean).join(' ')
 }
 
-export const EMOJIS = ['🦊', '🐸', '🐙', '🦄', '🐯', '🐼', '🦖', '👽', '🤖', '🔥', '💀', '🍺', '🎸', '🪩', '🌵', '🍕']
-
 /** En este orden salen en el selector; el último (el premio gordo) va a todo lo ancho. */
 export const GAMES = {
   tap: { name: 'Machaca el botón', level: 1, max: 3, desc: '10 segundos tocando sin parar.' },
