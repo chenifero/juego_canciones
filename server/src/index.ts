@@ -10,6 +10,7 @@ import { MockProvider } from './music/mock.ts'
 import type { MusicProvider } from './music/provider.ts'
 import { SpotifyProvider } from './music/spotify.ts'
 import { PHOTO_DIR, deleteAllPhotos, deletePhoto, savePhoto } from './photos.ts'
+import { famousAlbums } from './albums.ts'
 import { MIN_ARTISTS, SEED_QUERIES, distinctArtists, poolEntries } from './quiz.ts'
 import { debounced, readJson, writeJson } from './store.ts'
 
@@ -185,7 +186,7 @@ function cacheTracks(tracks: TrackInfo[]): void {
 }
 
 /**
- * Bote de canciones para la carátula pixelada y la trivia: lo que se ha buscado esta noche
+ * Bote de canciones para la trivia: lo que se ha buscado esta noche
  * y, si aún hay poco, unas búsquedas de reserva (se hacen una vez y se guardan 1 h).
  */
 let seedTracks: TrackInfo[] = []
@@ -271,8 +272,9 @@ io.on('connection', (socket) => {
   on(socket, 'support', (p) => engine.support(me(), p.requestId))
   on(socket, 'game:start', async (p) => {
     const u = me()
-    const pool = p.game === 'cover' || p.game === 'trivia' ? await ensureQuizPool() : []
-    return engine.startGame(u, p.game, pool)
+    const pool = p.game === 'trivia' ? await ensureQuizPool() : []
+    const albums = p.game === 'cover' ? await famousAlbums(music, MIN_ARTISTS) : []
+    return engine.startGame(u, p.game, pool, albums)
   })
   on(socket, 'game:answer', (p) => engine.answerQuiz(me(), p.sessionId, p.choice, p.ms))
   on(socket, 'game:finish', (p) => engine.finishGame(me(), p.sessionId, p.score))

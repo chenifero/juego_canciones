@@ -1,5 +1,5 @@
 import { randomInt } from 'node:crypto'
-import type { QuizRound, TrackInfo } from '../../shared/types.ts'
+import type { AlbumInfo, QuizRound, TrackInfo } from '../../shared/types.ts'
 
 /** Pregunta lista para el cliente + la respuesta buena (que no sale del servidor). */
 export interface BuiltRound {
@@ -91,21 +91,18 @@ function withOptions(right: Entry, wrong: Entry[], label: (e: Entry) => { title:
   return { options: all.map(label), correct: all.indexOf(right) }
 }
 
-/**
- * Carátula pixelada: 3 carátulas, 4 opciones (canción + artista).
- * `preferred` son las de esta noche (ranking, lo que ha sonado): salen antes que las de reserva.
- */
-export function buildCoverQuiz(entries: Entry[], preferred: Set<string>): BuiltRound[] | null {
-  const withCover = entries.filter((e) => e.cover)
-  if (distinctArtists(withCover) < MIN_ARTISTS) return null
-  const tonight = shuffle(withCover.filter((e) => preferred.has(e.key)))
-  const rest = shuffle(withCover.filter((e) => !preferred.has(e.key)))
-  const answers = pickDistinct([...tonight, ...rest].slice(0, 40), COVER_ROUNDS, new Set())
+/** Carátula pixelada: 3 portadas de álbumes famosos, 4 opciones (álbum + artista). */
+export function buildCoverQuiz(albums: AlbumInfo[]): BuiltRound[] | null {
+  const pool: Entry[] = albums
+    .filter((a) => a.cover)
+    .map((a) => ({ title: a.name, artist: a.artist, cover: a.cover, key: norm(a.name), artistKey: norm(a.artist) }))
+  if (distinctArtists(pool) < MIN_ARTISTS) return null
+  const answers = pickDistinct(pool, COVER_ROUNDS, new Set())
   if (answers.length < COVER_ROUNDS) return null
   return answers.map((right) => {
-    const wrong = pickDistinct(withCover, 3, new Set([right.artistKey]))
+    const wrong = pickDistinct(pool, 3, new Set([right.artistKey]))
     const { options, correct } = withOptions(right, wrong, (e) => ({ title: e.title, sub: e.artist }))
-    return { round: { prompt: '¿Qué canción es?', cover: right.cover, options, timeMs: COVER_TIME_MS }, correct }
+    return { round: { prompt: '¿Qué álbum es?', cover: right.cover, options, timeMs: COVER_TIME_MS }, correct }
   })
 }
 

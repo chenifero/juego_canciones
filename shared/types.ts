@@ -11,6 +11,13 @@ export interface TrackInfo {
   explicit: boolean
 }
 
+/** Un álbum con su portada (para el juego de las carátulas). */
+export interface AlbumInfo {
+  name: string
+  artist: string
+  cover: string
+}
+
 export interface PublicUser {
   id: string
   alias: string

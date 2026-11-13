@@ -1,4 +1,4 @@
-import type { TrackInfo } from '../../../shared/types.ts'
+import type { AlbumInfo, TrackInfo } from '../../../shared/types.ts'
 import type { MusicProvider, PlaybackResult } from './provider.ts'
 
 /**
@@ -125,6 +125,10 @@ export class MockProvider implements MusicProvider {
     const q = norm(query.trim())
     if (!q) return []
     return TRACKS.filter((t) => norm(`${t.title} ${t.artist}`).includes(q)).slice(0, 10)
+  }
+
+  async searchAlbums(name: string, artist: string): Promise<AlbumInfo[]> {
+    return [{ name, artist, cover: cover(name, artist) }]
   }
 
   sampleTracks(): TrackInfo[] {

@@ -9,6 +9,7 @@ import type {
   Phase,
   PublicState,
   PublicUser,
+  AlbumInfo,
   QuizAnswer,
   Settings,
   SongRequest,
@@ -404,7 +405,7 @@ export class Engine {
   }
 
   /** `pool`: canciones de reserva para montar las preguntas (solo en carátula y trivia). */
-  startGame(u: User, game: unknown, pool: TrackInfo[] = []): GameSession {
+  startGame(u: User, game: unknown, pool: TrackInfo[] = [], albums: AlbumInfo[] = []): GameSession {
     if (!GAME_IDS.includes(game as GameId)) throw new GameError('Juego desconocido')
     const g = game as GameId
     const r = u.teamId ? this.requests.get(u.teamId) : undefined
@@ -418,11 +419,8 @@ export class Engine {
     if (this.energyLeft(u) <= 0) throw new GameError('Sin energía: se recarga con la siguiente canción', 'NO_ENERGY')
     let quiz: BuiltRound[] | undefined
     if (g === 'cover' || g === 'trivia') {
-      const tonight = this.tracksTonight()
-      const entries = poolEntries([...tonight, ...pool])
-      const built =
-        g === 'cover' ? buildCoverQuiz(entries, new Set(poolEntries(tonight).map((e) => e.key))) : buildTriviaQuiz(entries)
-      if (!built) throw new GameError('Aún no hay canciones suficientes para este juego. Prueba otro', 'NO_POOL')
+      const built = g === 'cover' ? buildCoverQuiz(albums) : buildTriviaQuiz(poolEntries([...this.tracksTonight(), ...pool]))
+      if (!built) throw new GameError('Aún no hay datos suficientes para este juego. Prueba otro', 'NO_POOL')
       quiz = built
     }
     this.energyUsed.set(u.id, (this.energyUsed.get(u.id) ?? 0) + 1)

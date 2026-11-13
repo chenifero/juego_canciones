@@ -443,3 +443,14 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
   - Fuera los emojis, el verde y la cruz LED. La dirección web va en Archivo (el LED solo para cifras).
   - Comprobado en pantalla a 600 px de ancho (cabe entero en proporción A3). **Falta** probar la impresión real y que el QR se lea desde el móvil.
 - Siguiente: limpieza técnica y desplegar en Fly.
+
+## 13/11/2026 · Carátula con álbumes famosos
+
+- **Cambio pedido por Sergio:** la Carátula ya no usa canciones de la cola ni de las búsquedas (a veces la portada no era reconocible o fallaba). Ahora son **portadas de álbumes famosos**.
+- **Cómo funciona:**
+  - `server/src/albums.ts` tiene una lista de 42 álbumes (Abbey Road, Thriller, Nevermind, Motomami, Descanso Dominical…).
+  - Las portadas se buscan en Spotify una sola vez (`searchAlbums`) y se guardan en memoria; si salen pocas, se reintenta pasada 1 h.
+  - La pregunta es «¿Qué álbum es?», con 4 opciones (álbum + artista) de artistas distintos. Se enseña el nombre limpio de la lista, no «(Deluxe Edition)».
+  - La Trivia sigue usando las canciones de la noche.
+- **Comprobado con Spotify real:** 42 de 42 portadas encontradas. Tipos y `npm test` en verde (el simulador genera carátulas a partir del nombre).
+- Para añadir o quitar álbumes, basta con editar `FAMOUS_ALBUMS`.

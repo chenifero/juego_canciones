@@ -1,4 +1,4 @@
-import type { SpotifyStatus, TrackInfo } from '../../../shared/types.ts'
+import type { AlbumInfo, SpotifyStatus, TrackInfo } from '../../../shared/types.ts'
 
 export interface Playback {
   track: TrackInfo | null
@@ -20,6 +20,8 @@ export interface MusicProvider {
   accountName(): string | null
   getPlayback(): Promise<PlaybackResult>
   search(query: string): Promise<TrackInfo[]>
+  /** Álbumes que encajan con ese nombre y artista (el primero es el mejor). Para el juego de carátulas. */
+  searchAlbums(name: string, artist: string): Promise<AlbumInfo[]>
   getTrack(id: string): Promise<TrackInfo | null>
   addToQueue(uri: string): Promise<void>
   skip(): Promise<void>

@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto'
-import type { TrackInfo } from '../../../shared/types.ts'
+import type { AlbumInfo, TrackInfo } from '../../../shared/types.ts'
 import { config } from '../config.ts'
 import { readJson, writeJson } from '../store.ts'
 import type { MusicProvider, PlaybackResult } from './provider.ts'
@@ -34,10 +34,14 @@ export class SpotifyError extends Error {
   }
 }
 
+/** La imagen mediana (~300px) es suficiente y pesa poco. */
+function pickCover(images: { url: string; width: number | null }[] | undefined): string {
+  const imgs = [...(images ?? [])].sort((a, b) => (a.width ?? 0) - (b.width ?? 0))
+  return imgs.find((i) => (i.width ?? 0) >= 280)?.url ?? imgs.at(-1)?.url ?? ''
+}
+
 export function mapTrack(t: SpotifyTrack): TrackInfo {
-  // La imagen mediana (~300px) es suficiente y pesa poco
-  const imgs = [...(t.album.images ?? [])].sort((a, b) => (a.width ?? 0) - (b.width ?? 0))
-  const cover = imgs.find((i) => (i.width ?? 0) >= 280)?.url ?? imgs.at(-1)?.url ?? ''
+  const cover = pickCover(t.album.images)
   return {
     id: t.id,
     uri: t.uri,
@@ -129,6 +133,16 @@ export class SpotifyProvider implements MusicProvider {
     const params = new URLSearchParams({ q: query, type: 'track', limit: '10', market: config.spotify.market })
     const res = (await this.api('GET', `/search?${params}`)) as { tracks: { items: SpotifyTrack[] } }
     return (res?.tracks?.items ?? []).filter(Boolean).map(mapTrack)
+  }
+
+  async searchAlbums(name: string, artist: string): Promise<AlbumInfo[]> {
+    const params = new URLSearchParams({ q: `album:${name} artist:${artist}`, type: 'album', limit: '8', market: config.spotify.market })
+    const res = (await this.api('GET', `/search?${params}`)) as {
+      albums: { items: { name: string; artists: { name: string }[]; images: { url: string; width: number | null }[] }[] }
+    } | null
+    return (res?.albums?.items ?? [])
+      .filter(Boolean)
+      .map((a) => ({ name: a.name, artist: a.artists.map((x) => x.name).join(', '), cover: pickCover(a.images) }))
   }
 
   async getTrack(id: string): Promise<TrackInfo | null> {
