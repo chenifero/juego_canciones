@@ -18,6 +18,14 @@ import type {
 } from '../../shared/types.ts'
 import type { Playback } from './music/provider.ts'
 import { buildCoverQuiz, buildTriviaQuiz, poolEntries, type BuiltRound } from './quiz.ts'
+import { safeEqual, sha256 } from './ratelimit.ts'
+
+/** Cuánto dura una sesión de la dueña antes de pedir el PIN otra vez. */
+const ADMIN_SESSION_MS = 12 * 60 * 60_000
+/** Tope de jugadores a la vez (un bar no pasa de aquí; frena las altas masivas). */
+export const MAX_USERS = 400
+/** Puntos máximos (antes de multiplicadores) que un jugador puede sacar jugando en una ronda. */
+const GAME_POINTS_CAP = 15
 
 export class GameError extends Error {
   code: string
@@ -90,6 +98,8 @@ interface Session {
   /** Juegos de acertar: respuesta buena de cada ronda y lo que ha contestado. */
   quiz?: BuiltRound[]
   answers?: QuizAnswer[]
+  /** Cuándo llegó la última respuesta (o el inicio): el servidor mide aquí, no se fía del reloj del móvil. */
+  lastAnswerAt?: number
 }
 
 interface Dose {
@@ -107,7 +117,10 @@ export interface EngineSnapshot {
   requests: Req[]
   history: Played[]
   bannedDevices: string[]
-  adminTokens: string[]
+  /** Sesiones de la dueña: [hash del token, caducidad]. Nunca el token en claro. */
+  adminTokens: [string, number][]
+  /** Hash del PIN con que se crearon: si cambia el PIN, esas sesiones dejan de valer. */
+  adminPinHash?: string
   round: number
 }
 
@@ -134,7 +147,11 @@ export class Engine {
   private requests = new Map<string, Req>()
   private history: Played[] = []
   private bannedDevices = new Set<string>()
-  private adminTokens = new Set<string>()
+  /** hash del token → caducidad */
+  private adminTokens = new Map<string, number>()
+  private adminPinHash = ''
+  /** Códigos de un solo uso para ir a Spotify sin poner el token en la URL. */
+  private linkCodes = new Map<string, number>()
 
   round = 0
   phase: Phase = 'idle'
@@ -146,6 +163,8 @@ export class Engine {
   private lastLock: { winnerId: string; loserId: string | null; loserPoints: number; duel: DuelInfo | null } | null = null
   private voted = new Set<string>()
   private energyUsed = new Map<string, number>()
+  /** Puntos de juego (antes de multiplicadores) que lleva cada jugador esta ronda. */
+  private gamePoints = new Map<string, number>()
   private sessions = new Map<string, Session>()
   private doses = new Map<string, Dose>()
 
@@ -165,6 +184,7 @@ export class Engine {
       history: this.history,
       bannedDevices: [...this.bannedDevices],
       adminTokens: [...this.adminTokens],
+      adminPinHash: this.adminPinHash,
       round: this.round,
     }
   }
@@ -177,7 +197,12 @@ export class Engine {
     this.requests = new Map(s.requests.map((r) => [r.id, r]))
     this.history = s.history ?? []
     this.bannedDevices = new Set(s.bannedDevices ?? [])
-    this.adminTokens = new Set(s.adminTokens ?? [])
+    // Formato nuevo: pares [hash, caducidad]. Las sesiones guardadas por versiones antiguas (tokens en claro) se descartan.
+    const now = Date.now()
+    this.adminTokens = new Map(
+      (s.adminTokens ?? []).filter((t): t is [string, number] => Array.isArray(t) && typeof t[0] === 'string' && typeof t[1] === 'number' && t[1] > now),
+    )
+    this.adminPinHash = typeof s.adminPinHash === 'string' ? s.adminPinHash : ''
     this.round = s.round ?? 0
   }
 
@@ -240,6 +265,7 @@ export class Engine {
       this.onChange()
       return { token: existing.token, user: this.pub(existing)! }
     }
+    if (this.users.size >= MAX_USERS) throw new GameError('El bar está lleno ahora mismo. Prueba en un rato', 'FULL')
     const user: User = {
       id: id(6),
       token: id(24),
@@ -451,10 +477,18 @@ export class Engine {
     if (Date.now() < s.startsAt) throw new GameError('Aún no ha empezado')
     const n = Number(choiceRaw)
     const choice = Number.isInteger(n) && n >= 0 && n < q.round.options.length ? n : -1
+    const now = Date.now()
+    // El tiempo que declara el móvil no puede ser mayor que el que ha pasado de verdad desde la pregunta
+    // anterior (la pausa de 1,2 s entre preguntas solo juega en contra de quien responde).
+    const since = now - (s.lastAnswerAt ?? s.startsAt)
+    s.lastAnswerAt = now
+    // Fuera de plazo (con margen para la pausa y la red): cuenta como no contestada
+    const late = since > q.round.timeMs + 3_500
     // Menos de 250 ms no da ni para leer: se cuenta como 250
-    const ms = Math.round(Math.min(q.round.timeMs, Math.max(250, Number(msRaw) || q.round.timeMs)))
-    s.answers.push({ choice, ms })
-    return { correct: q.correct, right: choice === q.correct }
+    const claimed = Math.max(250, Number(msRaw) || q.round.timeMs)
+    const ms = Math.round(Math.min(q.round.timeMs, claimed, Math.max(250, since)))
+    s.answers.push({ choice: late ? -1 : choice, ms })
+    return { correct: q.correct, right: !late && choice === q.correct }
   }
 
   finishGame(u: User, sessionId: unknown, scoreRaw: unknown): GameResult {
@@ -481,6 +515,8 @@ export class Engine {
       }
       case 'reflex': {
         // Media de 5 reacciones en ms. Por debajo de 120 ms no es humano.
+        // Cinco rondas con espera de 1 s como mínimo más las pausas no caben en menos de 8 s.
+        if (now - s.startsAt < 8_000) throw new GameError('Has terminado demasiado pronto')
         shown = Math.round(Math.max(120, Math.min(score, 2_000)))
         base = shown <= 240 ? 3 : shown <= 300 ? 2 : shown <= 400 ? 1 : 0
         label = `${shown} ms de media`
@@ -533,7 +569,13 @@ export class Engine {
     const r = this.requests.get(s.requestId)
     if (!r || r.status !== 'waiting') return { points: 0, score: shown, message: `${label}. Tu canción ya no está en juego` }
     if (base === 0) return { points: 0, score: shown, message: `${label}. ¡Casi! Esta vez no suma` }
-    const points = this.addPoints(r, base)
+    // Tope de puntos de juego por jugador y ronda: aunque alguien reporte marcas perfectas, no se lleva toda la escalera
+    const used = this.gamePoints.get(u.id) ?? 0
+    const room = Math.max(0, GAME_POINTS_CAP - used)
+    const granted = Math.min(base, room)
+    if (granted === 0) return { points: 0, score: shown, message: `${label}. Ya has sumado todo lo que se puede jugando esta ronda` }
+    this.gamePoints.set(u.id, used + granted)
+    const points = this.addPoints(r, granted)
     this.onChange()
     return { points, score: shown, message: `${label} → +${points} para «${r.track.title}»` }
   }
@@ -706,6 +748,7 @@ export class Engine {
     this.round++
     this.voted.clear()
     this.energyUsed.clear()
+    this.gamePoints.clear()
     this.sessions.clear()
     this.phase = 'open'
     this.duel = null
@@ -783,16 +826,60 @@ export class Engine {
 
   // ───────────────────────── admin ─────────────────────────
 
+  /** Comprueba el PIN (sin pistas de tiempo) y abre una sesión que caduca. Los intentos los frena index.ts. */
   adminLogin(pin: unknown, realPin: string): string {
-    if (typeof pin !== 'string' || pin !== realPin) throw new GameError('PIN incorrecto', 'BAD_PIN')
+    if (typeof pin !== 'string' || !safeEqual(pin, realPin)) throw new GameError('PIN incorrecto', 'BAD_PIN')
+    const now = Date.now()
+    for (const [h, exp] of this.adminTokens) if (exp <= now) this.adminTokens.delete(h)
     const token = id(24)
-    this.adminTokens.add(token)
+    this.adminTokens.set(sha256(token), now + ADMIN_SESSION_MS)
     this.onChange()
     return token
   }
 
   isAdmin(token: unknown): boolean {
-    return typeof token === 'string' && this.adminTokens.has(token)
+    if (typeof token !== 'string') return false
+    const h = sha256(token)
+    const exp = this.adminTokens.get(h)
+    if (exp === undefined) return false
+    if (exp <= Date.now()) {
+      this.adminTokens.delete(h)
+      return false
+    }
+    return true
+  }
+
+  /** «Salir del mando»: la sesión deja de valer también en el servidor. */
+  adminLogout(token: unknown): void {
+    if (typeof token === 'string' && this.adminTokens.delete(sha256(token))) this.onChange()
+  }
+
+  /**
+   * Se llama al arrancar con el PIN actual: si ha cambiado desde la última vez,
+   * todas las sesiones de la dueña se cierran (una sesión robada no sobrevive al cambio de PIN).
+   */
+  bindAdminPin(pin: string): void {
+    const h = sha256(`barma-pin:${pin}`)
+    if (this.adminPinHash !== h) {
+      if (this.adminPinHash) this.adminTokens.clear()
+      this.adminPinHash = h
+    }
+  }
+
+  /** Código de un solo uso (60 s) para abrir el enlace de Spotify sin dejar el token en la URL. */
+  createLinkCode(): string {
+    const now = Date.now()
+    for (const [c, exp] of this.linkCodes) if (exp <= now) this.linkCodes.delete(c)
+    const code = id(16)
+    this.linkCodes.set(code, now + 60_000)
+    return code
+  }
+
+  consumeLinkCode(code: unknown): boolean {
+    if (typeof code !== 'string') return false
+    const exp = this.linkCodes.get(code)
+    this.linkCodes.delete(code)
+    return exp !== undefined && exp > Date.now()
   }
 
   adminState(onlineIds: Set<string>, account: string | null): AdminState {
@@ -828,6 +915,7 @@ export class Engine {
     this.history = []
     this.voted.clear()
     this.energyUsed.clear()
+    this.gamePoints.clear()
     this.sessions.clear()
     this.doses.clear()
     this.phase = 'idle'

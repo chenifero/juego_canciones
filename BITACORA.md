@@ -494,3 +494,15 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
   5. Pendiente de validar: agotar el cupo de Spotify con muchas búsquedas.
 - **Límites:** los validadores oficiales de la auditoría no funcionan en Windows (se pasó una comprobación propia); sin `npm audit` (sin red).
 - **Antes de publicar en Fly:** arreglar 1 y 4 (límite de intentos, `ADMIN_PIN` largo como secreto, caducidad y cierre de sesión de tokens).
+
+## 13/11/2026 · Arreglos de la auditoría de seguridad
+
+- **PIN de la dueña (alta):**
+  - Freno de intentos: tras 3 fallos, cada IP espera 2, 4, 8… s (hasta 15 min), y hay un tope global de 30 fallos por minuto. Comparación del PIN en tiempo constante. Código en `server/src/ratelimit.ts`.
+  - En producción (`NODE_ENV=production`, como en el Dockerfile) el servidor **no arranca** si `ADMIN_PIN` falta, no tiene 6-12 cifras o es evidente (123456, 000000…). En desarrollo sigue valiendo 1234. El teclado del panel admite hasta 12 cifras.
+- **Sesión de la dueña (media):** los tokens caducan a las 12 h, se guardan con hash (no en claro), «Salir del mando» los borra también en el servidor (`admin:logout`) y cambiar el PIN cierra todas las sesiones. El botón «Conectar Spotify» ya no pone el token en la URL: usa un código de un solo uso de 60 s (`admin:spotifyLink`). **Efecto:** la primera vez tras este cambio, la dueña tendrá que volver a poner el PIN.
+- **Identidades ilimitadas (media), mitigado, no resuelto del todo:** máximo 60 altas por IP cada 10 min, 400 jugadores a la vez, 150 conexiones por IP y límites por IP en búsqueda y foto. Sigue sin haber prueba de presencia (que solo entre quien está en el bar): hace falta decidir cómo, por ejemplo un código de la noche en el cartel. Los baneos siguen siendo por dispositivo.
+- **Puntos de los juegos (media):** tope de 15 puntos de juego por jugador y ronda, tiempo mínimo en Reflejos (8 s), y en Carátula/Trivia el servidor mide el tiempo y marca como no contestada una respuesta fuera de plazo. Las marcas de Crono, Machaca, Memoria y Ritmo siguen viniendo del móvil (solo acotadas).
+- **Cupo de Spotify (pendiente de validar):** `Retry-After` con tope de 30 s, frenos separados para reproducción y búsqueda, y búsquedas limitadas por IP y en total (también al pedir una canción no cacheada).
+- Pruebas: la prueba de humo pasa de 79 a más comprobaciones (freno de PIN, cierre de sesión, tokens fuera del disco, código de Spotify, tiempo mínimo de Reflejos, tope de puntos, plazo de quiz, altas masivas) y se repitieron las de Playwright del panel, el duelo y el ranking.
+- **Pendiente:** presencia en el bar, `USER node` en el Dockerfile (hay que ajustar los permisos del volumen `/data`), cabeceras de seguridad, y poner `ADMIN_PIN` como secreto en Fly.

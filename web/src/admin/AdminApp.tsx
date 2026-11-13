@@ -40,6 +40,16 @@ type AdminFull = AdminState & {
 
 const adminEmit = <T,>(ev: string, p: object = {}) => emit<T>(ev, { ...p, adminToken: session.adminToken })
 
+/** Ir a Spotify con un código de un solo uso (el token de la dueña no viaja en la URL). */
+async function goSpotify(): Promise<void> {
+  try {
+    const { code } = await adminEmit<{ code: string }>('admin:spotifyLink')
+    location.href = `/auth/login?code=${encodeURIComponent(code)}`
+  } catch (e) {
+    toast((e as Error).message, 'error')
+  }
+}
+
 export function AdminApp() {
   const { state, connected } = useStore()
   const [authed, setAuthed] = useState(!!session.adminToken)
@@ -92,6 +102,8 @@ export function AdminApp() {
       admin={admin}
       connected={connected}
       onLogout={() => {
+        // Se cierra también en el servidor: el token deja de valer aunque alguien lo hubiera copiado
+        void adminEmit('admin:logout').catch(() => {})
         session.setAdminToken(null)
         setAuthed(false)
       }}
@@ -126,7 +138,7 @@ function PinScreen({ onOk }: { onOk: () => void }) {
   const press = (d: string) => {
     if (d === 'del') return setPin((p) => p.slice(0, -1))
     if (d === 'ok') return pin.length >= 4 && void submit(pin)
-    setPin((p) => (p.length < 8 ? p + d : p))
+    setPin((p) => (p.length < 12 ? p + d : p))
   }
 
   const slots = Math.max(4, pin.length)
@@ -353,9 +365,9 @@ function Panel({ state, admin, connected, onLogout }: { state: PublicState; admi
               <Warning size={22} weight="fill" aria-hidden />
               <p className="flex-1 text-[15px] font-bold leading-tight">{problem}</p>
               {state.spotify === 'disconnected' && !admin.mock && admin.spotifyConfigured && (
-                <a href={`/auth/login?admin=${encodeURIComponent(session.adminToken ?? '')}`} className="rounded-[4px] bg-print px-3 py-2 text-[13px] font-bold text-paper">
+                <button onClick={() => void goSpotify()} className="rounded-[4px] bg-print px-3 py-2 text-[13px] font-bold text-paper">
                   Conectar
-                </a>
+                </button>
               )}
             </div>
           </motion.div>
@@ -597,12 +609,12 @@ function SettingsDrawer({
             </p>
           </div>
           {!admin.mock && admin.spotifyConfigured && (
-            <a
-              href={`/auth/login?admin=${encodeURIComponent(session.adminToken ?? '')}`}
+            <button
+              onClick={() => void goSpotify()}
               className="pulsador grid h-11 place-items-center bg-[#1ed760] px-3 text-[13px] font-black text-print"
             >
               {state.spotify === 'disconnected' ? 'Conectar' : 'Cambiar'}
-            </a>
+            </button>
           )}
         </div>
         <p className="mt-3 text-[13px] leading-snug text-paper/70">

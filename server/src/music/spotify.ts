@@ -58,7 +58,11 @@ export class SpotifyProvider implements MusicProvider {
   readonly kind = 'spotify' as const
   private tokens: Tokens | null = readJson<Tokens>(TOKENS_FILE)
   private pendingStates = new Map<string, number>()
-  private backoffUntil = 0
+  /**
+   * Frenos por 429, separados: si las búsquedas de los clientes agotan el cupo, la reproducción
+   * y la cola (lo que mantiene la música del bar) no se bloquean de antemano por culpa suya.
+   */
+  private backoffUntil = { player: 0, catalog: 0 }
   private refreshing: Promise<void> | null = null
 
   isConnected(): boolean {
@@ -205,7 +209,9 @@ export class SpotifyProvider implements MusicProvider {
   }
 
   private async api(method: string, path: string, retried = false): Promise<unknown> {
-    if (Date.now() < this.backoffUntil) throw new SpotifyError(429, 'Spotify pide esperar un poco')
+    const scope = path.startsWith('/me/player') ? 'player' : 'catalog'
+    if (scope === 'catalog' && Date.now() < this.backoffUntil.catalog) throw new SpotifyError(429, 'Spotify pide esperar un poco')
+    if (scope === 'player' && Date.now() < this.backoffUntil.player) throw new SpotifyError(429, 'Spotify pide esperar un poco')
     const token = await this.ensureToken()
     const res = await fetch(`${API}${path}`, { method, headers: { Authorization: `Bearer ${token}` } })
     if (res.status === 401 && !retried && this.tokens) {
@@ -213,8 +219,9 @@ export class SpotifyProvider implements MusicProvider {
       return this.api(method, path, true)
     }
     if (res.status === 429) {
-      const wait = Number(res.headers.get('retry-after') ?? 5)
-      this.backoffUntil = Date.now() + wait * 1000
+      // Con tope: un Retry-After enorme no puede dejar la música sin gestionar durante minutos
+      const wait = Math.min(30, Math.max(1, Number(res.headers.get('retry-after') ?? 5) || 5))
+      this.backoffUntil[scope] = Date.now() + wait * 1000
       throw new SpotifyError(429, `Spotify limita peticiones (${wait}s)`)
     }
     if (res.status === 204) return null

@@ -11,6 +11,7 @@ import type { MusicProvider } from './music/provider.ts'
 import { SpotifyProvider } from './music/spotify.ts'
 import { PHOTO_DIR, deleteAllPhotos, deletePhoto, savePhoto } from './photos.ts'
 import { famousAlbums } from './albums.ts'
+import { LoginGuard, WindowCounter, clientIp } from './ratelimit.ts'
 import { MIN_ARTISTS, SEED_QUERIES, distinctArtists, poolEntries } from './quiz.ts'
 import { debounced, readJson, writeJson } from './store.ts'
 
@@ -23,12 +24,27 @@ const STATE_FILE = 'state.json'
 
 const saved = readJson<EngineSnapshot>(STATE_FILE)
 if (saved) engine.restore(saved)
+engine.bindAdminPin(config.adminPin) // si cambió el PIN, las sesiones antiguas de la dueña se cierran
 if (config.mock && !engine.open) engine.openNight() // en el simulador la noche arranca abierta
 
 const persist = debounced(() => writeJson(STATE_FILE, engine.snapshot()), 1_000)
 
 /** Errores recientes de Spotify para enseñárselos a la dueña. */
 let lastMusicError: { message: string; at: number } | null = null
+
+// ───────────────────────── límites de uso ─────────────────────────
+
+/** Intentos de PIN: espera creciente por IP y tope global por minuto. */
+const loginGuard = new LoginGuard()
+/** Altas de jugadores nuevos por IP (el bar entero comparte la wifi, de ahí el margen). */
+const joinLimit = new WindowCounter(60, 10 * 60_000)
+/** Búsquedas y consultas a Spotify: por IP y en total, para no gastar el cupo de la cuenta de la dueña. */
+const searchPerIp = new WindowCounter(30, 10_000)
+const searchGlobal = new WindowCounter(80, 10_000)
+const photoPerIp = new WindowCounter(12, 60_000)
+/** Conexiones abiertas a la vez por IP. */
+const MAX_SOCKETS_PER_IP = 150
+const socketsPerIp = new Map<string, number>()
 
 // ───────────────────────── HTTP ─────────────────────────
 
@@ -42,7 +58,8 @@ app.get('/api/health', (_req, res) => {
 /** La dueña pulsa "Conectar Spotify" en su panel → aquí → Spotify. */
 app.get('/auth/login', (req, res) => {
   if (!spotify) return res.status(400).send('Estás en modo simulador (MOCK_SPOTIFY=1)')
-  if (!engine.isAdmin(req.query.admin)) return res.status(403).send('Solo desde el panel de la dueña')
+  // El enlace lo crea el panel con un código de un solo uso (60 s): el token de la dueña nunca viaja en la URL
+  if (!engine.consumeLinkCode(req.query.code)) return res.status(403).send('Enlace caducado: vuelve a pulsarlo desde el panel de la dueña')
   if (!config.spotify.clientId) return res.status(500).send('Falta SPOTIFY_CLIENT_ID en .env')
   res.redirect(spotify.authorizeUrl())
 })
@@ -212,6 +229,19 @@ async function ensureQuizPool(): Promise<TrackInfo[]> {
 }
 
 io.on('connection', (socket) => {
+  const ip = clientIp(socket)
+  const open = (socketsPerIp.get(ip) ?? 0) + 1
+  if (open > MAX_SOCKETS_PER_IP) {
+    socket.disconnect(true)
+    return
+  }
+  socketsPerIp.set(ip, open)
+  socket.on('disconnect', () => {
+    const left = (socketsPerIp.get(ip) ?? 1) - 1
+    if (left <= 0) socketsPerIp.delete(ip)
+    else socketsPerIp.set(ip, left)
+  })
+
   const auth = socket.handshake.auth as { token?: string; deviceId?: string; adminToken?: string }
   const deviceId = typeof auth.deviceId === 'string' ? auth.deviceId.slice(0, 64) : ''
 
@@ -242,6 +272,7 @@ io.on('connection', (socket) => {
 
   // ── clientes ──
   on(socket, 'join', (p) => {
+    if (!joinLimit.take(ip)) throw new GameError('Demasiada gente entrando a la vez. Prueba en unos minutos', 'RATE')
     const res = engine.join(p.alias, deviceId)
     bindUser(res.token)
     broadcast()
@@ -254,7 +285,7 @@ io.on('connection', (socket) => {
     const q = String(p.q ?? '').trim().slice(0, 80)
     if (q.length < 2) return []
     const now = Date.now()
-    if (now - lastSearch < 400) throw new GameError('Más despacio 🙂', 'RATE')
+    if (now - lastSearch < 400 || !searchPerIp.take(ip) || !searchGlobal.take('all')) throw new GameError('Más despacio 🙂', 'RATE')
     lastSearch = now
     const tracks = await music.search(q)
     cacheTracks(tracks)
@@ -264,7 +295,11 @@ io.on('connection', (socket) => {
   on(socket, 'request', async (p) => {
     const u = me()
     const trackId = String(p.trackId ?? '')
-    const track = trackCache.get(trackId)?.track ?? (await music.getTrack(trackId))
+    let track = trackCache.get(trackId)?.track
+    if (!track) {
+      if (!searchPerIp.take(ip) || !searchGlobal.take('all')) throw new GameError('Más despacio 🙂', 'RATE')
+      track = (await music.getTrack(trackId)) ?? undefined
+    }
     if (!track) throw new GameError('No encuentro esa canción')
     return engine.requestSong(u, track)
   })
@@ -282,7 +317,7 @@ io.on('connection', (socket) => {
   let lastPhoto = 0
   on(socket, 'photo:set', (p) => {
     const u = me()
-    if (Date.now() - lastPhoto < 3_000) throw new GameError('Espera un momento antes de cambiarla', 'RATE')
+    if (Date.now() - lastPhoto < 3_000 || !photoPerIp.take(ip)) throw new GameError('Espera un momento antes de cambiarla', 'RATE')
     savePhoto(u.id, p.data)
     lastPhoto = Date.now()
     engine.setPhoto(u)
@@ -298,10 +333,30 @@ io.on('connection', (socket) => {
 
   // ── panel de la dueña ──
   on(socket, 'admin:login', (p) => {
-    const token = engine.adminLogin(p.pin, config.adminPin)
+    const wait = loginGuard.wait(ip)
+    if (wait > 0) throw new GameError(`Demasiados intentos. Espera ${wait} s`, 'RATE_LIMIT')
+    let token: string
+    try {
+      token = engine.adminLogin(p.pin, config.adminPin)
+    } catch (err) {
+      loginGuard.fail(ip)
+      throw err
+    }
+    loginGuard.ok(ip)
     void socket.join('admin')
     broadcast()
     return { token }
+  })
+  on(socket, 'admin:logout', (p) => {
+    admin(p)
+    engine.adminLogout(p.adminToken)
+    void socket.leave('admin')
+    return true
+  })
+  /** Código de un solo uso para el botón «Conectar Spotify» (así el token no viaja en la URL). */
+  on(socket, 'admin:spotifyLink', (p) => {
+    admin(p)
+    return { code: engine.createLinkCode() }
   })
   on(socket, 'admin:hello', (p) => {
     admin(p)

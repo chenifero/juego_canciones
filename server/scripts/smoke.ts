@@ -6,7 +6,7 @@
  *   node server/scripts/smoke.ts
  */
 import { spawn } from 'node:child_process'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { io, type Socket } from 'socket.io-client'
@@ -236,6 +236,67 @@ async function main() {
   const stale = await ana.emit('search', { q: 'hombres' })
   check(!stale.ok && stale.code === 'NO_SESSION', 'Ana tiene que volver a poner alias para jugar')
   await ok(ana.emit('join', { alias: 'Ana' }), 'Ana entra de nuevo con alias (el de anoche está libre)')
+
+  // ── Seguridad: freno de PIN, sesiones de la dueña, límites de uso ──
+  const thief = client()
+  for (let i = 0; i < 4; i++) await thief.emit('admin:login', { pin: String(1000 + i) })
+  const blocked = await thief.emit('admin:login', { pin: '9999' })
+  check(!blocked.ok && blocked.code === 'RATE_LIMIT', 'Tras 4 PIN malos, ni el bueno entra hasta que pase la espera')
+  await sleep(2_300)
+  const okAgain = await thief.emit('admin:login', { pin: '9999' })
+  check(okAgain.ok, 'Pasada la espera, el PIN bueno entra y se quita el castigo')
+
+  const sess = client()
+  const { token: t2 } = await ok<{ token: string }>(sess.emit('admin:login', { pin: '9999' }), 'La dueña abre otra sesión')
+  await ok(sess.emit('admin:settings', { adminToken: t2, settings: {} }), 'La sesión nueva funciona')
+  await ok(sess.emit('admin:logout', { adminToken: t2 }), 'La dueña sale del mando')
+  const afterLogout = await sess.emit('admin:settings', { adminToken: t2, settings: {} })
+  check(!afterLogout.ok && afterLogout.code === 'NO_ADMIN', 'Tras salir, el token deja de valer también en el servidor')
+  const link = await ok<{ code: string }>(boss.emit('admin:spotifyLink', { adminToken }), 'La dueña pide el código de un solo uso para Spotify')
+  check(typeof link.code === 'string' && link.code.length >= 16, 'El código de Spotify es largo')
+  const noLink = await client().emit('admin:spotifyLink', {})
+  check(!noLink.ok && noLink.code === 'NO_ADMIN', 'Sin sesión de dueña no se pide ese código')
+  await sleep(1_500)
+  const saved = readFileSync(join(dataDir, 'state.json'), 'utf8')
+  check(!saved.includes(adminToken) && !saved.includes(t2), 'Los tokens de la dueña no se guardan en claro en el disco')
+
+  // Juegos: tiempo mínimo en Reflejos y tope de puntos por ronda
+  const found = await ok<TrackInfo[]>(ana.emit('search', { q: 'bailando' }), 'Ana busca otra canción')
+  await ok(ana.emit('request', { trackId: found[0]!.id }), 'Ana pide canción para jugar')
+  const rf = await ok<GameSession>(ana.emit('game:start', { game: 'reflex' }), 'Ana empieza Reflejos')
+  await sleep(rf.startsAt - Date.now() + 500)
+  const tooSoon = await ana.emit('game:finish', { sessionId: rf.sessionId, score: 120 })
+  check(!tooSoon.ok, 'Reflejos: terminar al instante se rechaza')
+  let total = 0
+  for (let i = 0; i < 2; i++) {
+    const sw = await ok<GameSession>(ana.emit('game:start', { game: 'stopwatch' }), `Ana empieza el crono (${i + 1})`)
+    await sleep(sw.startsAt - Date.now() + 8_300)
+    const r = await ok<GameResult>(ana.emit('game:finish', { sessionId: sw.sessionId, score: 0 }), `Ana termina el crono con marca perfecta (${i + 1})`)
+    total += r.points
+  }
+  check(total === 15, `Tope de puntos jugando por ronda: 10 + 5 = 15 (${total})`)
+
+  // Quizzes: una respuesta fuera de plazo no puntúa aunque el índice fuera el bueno
+  const dora = client({ deviceId: 'dev-dora' })
+  await ok(dora.emit('join', { alias: 'Dora' }), 'Dora entra')
+  const tusa = await ok<TrackInfo[]>(dora.emit('search', { q: 'tusa' }), 'Dora busca')
+  await ok(dora.emit('request', { trackId: tusa[0]!.id }), 'Dora pide canción')
+  const cv = await ok<GameSession>(dora.emit('game:start', { game: 'cover' }), 'Dora empieza Carátula')
+  await sleep(cv.startsAt - Date.now() + 11_000)
+  const lateAns = await ok<{ correct: number; right: boolean }>(dora.emit('game:answer', { sessionId: cv.sessionId, choice: 0, ms: 250 }), 'Dora contesta fuera de plazo')
+  check(lateAns.right === false, 'Contestar fuera de plazo no puntúa')
+
+  // Altas: tope por IP y por ventana
+  let joined = 0
+  let limited = 0
+  for (let i = 0; i < 70; i++) {
+    const c = client({ deviceId: `flood-${i}` })
+    const r = await c.emit('join', { alias: `Flood${i}` })
+    if (r.ok) joined++
+    else if (r.code === 'RATE') limited++
+    c.socket.close()
+  }
+  check(limited > 0 && joined < 70, `Altas masivas frenadas por IP (${joined} entraron, ${limited} frenadas)`)
 }
 
 main()

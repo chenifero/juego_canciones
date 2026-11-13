@@ -57,6 +57,7 @@ web/src/games/         minijuegos
 fly launch --no-deploy --copy-config        # usa fly.toml (app "barmagames", región Madrid)
 fly volumes create barma_data --region mad --size 1
 fly secrets set SPOTIFY_CLIENT_ID=... SPOTIFY_CLIENT_SECRET=... ADMIN_PIN=...
+# ADMIN_PIN: de 6 a 12 cifras y nada evidente (123456, 000000…). En Fly el servidor se niega a arrancar sin uno bueno.
 fly deploy
 ```
 
