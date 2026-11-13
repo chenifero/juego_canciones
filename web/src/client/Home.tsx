@@ -8,9 +8,11 @@ import { DuelBar, DuelOverlay, getDuel } from '../components/DuelView.tsx'
 import { GamePicker } from '../components/GamePicker.tsx'
 import { Bulbs, Led } from '../components/machine.tsx'
 import { NowPlaying } from '../components/NowPlaying.tsx'
+import { Nudge } from '../components/Nudge.tsx'
 import { Ranking } from '../components/Ranking.tsx'
 import { SearchSheet } from '../components/SearchSheet.tsx'
 import { SongSheet } from '../components/SongSheet.tsx'
+import { Urgency } from '../components/Urgency.tsx'
 import { toast } from '../components/Toasts.tsx'
 import { WinnerOverlay } from '../components/WinnerOverlay.tsx'
 import { GameRunner, startGame } from '../games/GameRunner.tsx'
@@ -36,6 +38,9 @@ export function Home({
   const [selected, setSelected] = useState<SongRequest | null>(null)
   const [session, setSession] = useState<GameSession | null>(null)
   const [faceOpen, setFaceOpen] = useState(false)
+  // Últimos segundos antes de cerrar: todo se pone en rojo y tiembla (lo gobierna <Urgency>)
+  const [urgent, setUrgent] = useState(false)
+  const shakeRef = useRef<HTMLDivElement>(null)
 
   // El duelo se abre a pantalla completa una vez por duelo; luego se puede minimizar
   const duel = getDuel(state)
@@ -79,6 +84,8 @@ export function Home({
 
   return (
     <div className="mx-auto min-h-[100dvh] max-w-lg px-4 pb-48 safe-top">
+      <Urgency state={state} shakeRef={shakeRef} onChange={setUrgent} />
+      <div ref={shakeRef}>
       <header className="pb-3">
         <Bulbs count={15} size={7} chase={!!duel} className="px-1" />
         <div className="mt-3 flex items-center gap-2.5">
@@ -119,8 +126,11 @@ export function Home({
 
       <NowPlaying state={state} duelShownElsewhere={!!duel} />
 
-      <h2 className="mb-3 mt-7 font-display text-[18px] leading-none">Ranking</h2>
-      <Ranking state={state} me={me} onSelect={setSelected} onSupport={support} />
+      <Nudge state={state} me={me} urgent={urgent} onPlay={() => setPickerOpen(true)} onSearch={() => setSearchOpen(true)} />
+
+      <h2 className="mb-3 mt-6 font-display text-[18px] leading-none">Ranking</h2>
+      <Ranking state={state} me={me} onSelect={setSelected} />
+      </div>
 
       <Deck state={state} me={me} onSearch={() => setSearchOpen(true)} onPlay={() => setPickerOpen(true)} onMine={showMine} />
 

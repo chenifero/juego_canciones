@@ -467,3 +467,11 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - **Entrada:** fuera los emojis. Arriba, un **selfie grande** (círculo de 128 px con cámara y un «+»); debajo, el nombre. Quien no quiera foto entra solo con el nombre.
 - **Sin foto:** la cara muestra la **inicial del nombre** (Bungee, cian) en lugar del emoji.
 - **Limpieza:** el campo `emoji` desaparece del servidor, de los tipos compartidos, del panel de la dueña y de la prueba de humo. `npm test` y tipos en verde.
+
+## 13/11/2026 · Vuelta al ranking: más dinámico y con rótulo de acción
+
+- **Fuera el botón +1/+2** de cada peldaño. Se sigue pudiendo votar desde la ficha de la canción; el ranking empuja a jugar.
+- **Rótulo grande (`Nudge`)** bajo la ventana SUENA: «¿Quieres que tu canción suene primero? Juega a los minijuegos». Cambia según quien mira (sin canción → «Pide tu canción»; vas primera → «No te la quiten»; sin partidas → desactivado; en equipo ajeno → únete).
+- **Alarma de cierre (`Urgency`)**: en los últimos 10 s la pantalla se pone en rojo (viñeta que late), la columna tiembla cada segundo y el móvil vibra, más fuerte en los 3 últimos. El rótulo pasa a rojo con «¡Se acaba el tiempo! Juega ya», y los LED del tiempo a rojo.
+- **Límites:** Safari en iPhone no permite vibrar desde una web, así que allí solo se ve (rojo y temblor). Android sí vibra.
+- Tipos, build y `npm test` en verde. **Falta verlo en el móvil** con una canción a punto de cerrar (no se ha podido simular el final de canción en pantalla).

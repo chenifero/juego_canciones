@@ -138,7 +138,7 @@ export function DuelOverlay({
                 >
                   <p className="font-display text-[34px] leading-none text-paper">VS</p>
                   <span className="led-well rounded-[4px] px-2 py-1">
-                    <Led value={fmtTime(toLock)} className="text-[20px]" color={urgent ? 'var(--color-pink)' : 'var(--color-amber)'} />
+                    <Led value={fmtTime(toLock)} className="text-[20px]" color={urgent ? 'var(--color-red)' : 'var(--color-amber)'} />
                   </span>
                   <p className="font-display text-[11px] text-amber">Puntos ×{vote}</p>
                 </motion.div>

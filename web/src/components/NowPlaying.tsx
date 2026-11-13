@@ -102,7 +102,7 @@ export function NowPlaying({ state, duelShownElsewhere = false }: { state: Publi
 
         {!quiet && <div className="relative mt-3 flex items-center gap-3">
           <div className={cx('led-well shrink-0 rounded-[4px] px-2.5 py-2', urgent && 'animate-pulse-fast')}>
-            <Led value={led} className="text-[24px]" color={urgent ? 'var(--color-pink)' : 'var(--color-amber)'} />
+            <Led value={led} className="text-[24px]" color={urgent ? 'var(--color-red)' : 'var(--color-amber)'} />
           </div>
           <div className="min-w-0 font-display text-[14px] uppercase leading-tight text-print">{label}</div>
         </div>}

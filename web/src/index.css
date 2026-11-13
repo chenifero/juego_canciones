@@ -49,6 +49,8 @@
   --animate-glow: glow 2.4s ease-in-out infinite;
   --animate-pulse-fast: pulse-fast 0.8s ease-in-out infinite;
   --animate-breathe: breathe 2.2s ease-in-out infinite;
+  --animate-alarm: alarm 1s ease-in-out infinite;
+  --animate-breathe-amber: breathe-amber 2.2s ease-in-out infinite;
   --animate-shake: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 
   @keyframes led {
@@ -67,6 +69,15 @@
   @keyframes breathe {
     0%, 100% { box-shadow: inset 0 -6px 0 rgb(0 0 0 / 0.22), inset 0 2px 0 rgb(255 255 255 / 0.55), 0 14px 30px -12px rgb(25 195 255 / 0.55); }
     50% { box-shadow: inset 0 -6px 0 rgb(0 0 0 / 0.22), inset 0 2px 0 rgb(255 255 255 / 0.55), 0 18px 44px -8px rgb(25 195 255 / 0.95); }
+  }
+  /* Latido del borde rojo en los últimos segundos */
+  @keyframes alarm {
+    0%, 100% { opacity: 0.45; }
+    50% { opacity: 1; }
+  }
+  @keyframes breathe-amber {
+    0%, 100% { box-shadow: inset 0 -6px 0 rgb(0 0 0 / 0.22), inset 0 2px 0 rgb(255 255 255 / 0.55), 0 14px 30px -12px rgb(255 194 61 / 0.45); }
+    50% { box-shadow: inset 0 -6px 0 rgb(0 0 0 / 0.22), inset 0 2px 0 rgb(255 255 255 / 0.55), 0 18px 44px -8px rgb(255 194 61 / 0.9); }
   }
   @keyframes shake {
     10%, 90% { transform: translate3d(-1px, 0, 0); }
@@ -199,6 +210,21 @@
   &:disabled {
     filter: grayscale(0.7) brightness(0.55);
     cursor: default;
+  }
+}
+
+/* Borde rojo de alarma: viñeta que late sobre toda la pantalla sin tapar los toques */
+@utility alarm-glow {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 45%, transparent 55%, rgb(255 40 60 / 0.4) 100%);
+  box-shadow: inset 0 0 70px 12px rgb(255 50 70 / 0.7);
+  animation: alarm 1s ease-in-out infinite both;
+  &[data-hot] {
+    animation-duration: 0.5s;
+    box-shadow: inset 0 0 110px 26px rgb(255 50 70 / 0.85);
   }
 }
 

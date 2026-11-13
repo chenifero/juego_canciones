@@ -157,7 +157,7 @@ Negro de mueble, cian de cristal, ámbar de bombilla y un rosa reservado al riva
 - **Bombilla apagada** (lamp-off): el vidrio ámbar sin corriente; base de las bombillas apagadas.
 
 ### Tertiary
-- **Rosa rival** (pink): exclusivo del rival del duelo (cristal rosa en la escalera, mitad derecha de la ventana SUENA, mitad del VS). Por extensión, alarma: LED en los últimos 10 s, avisos de error, sello CERRADO y aviso de sin conexión.
+- **Rosa rival** (pink): exclusivo del rival del duelo (cristal rosa en la escalera, mitad derecha de la ventana SUENA, mitad del VS). Por extensión, alarma: (el LED del tiempo ahora va en rojo), avisos de error, sello CERRADO y aviso de sin conexión.
 
 ### Neutral
 - **Mueble** (ink): fondo de toda la pantalla y fondo de los pulsadores de voto.
@@ -234,7 +234,7 @@ Cuadrados, gordos y físicos: se hunden al tocarlos.
 - **Primary (PIDE):** cristal cian encendido con tinta `print`, Bungee 19px, 100px de alto, a todo lo ancho que queda. Mientras puedas pedir, "respira" (`breathe`, 2,2 s): su resplandor cian crece y mengua.
 - **Secondary (JUGAR y juegos):** ámbar con tinta `print`; JUGAR lleva sus créditos como bombillas debajo del rótulo.
 - **Acción de cajón:** 64px de alto, cristal cian o ámbar, Bungee 17-18px.
-- **Voto (+1):** 32px, fondo `ink`, rótulo ámbar y filete ámbar al 50 %.
+- **Voto (+1):** ya no hay botón en los peldaños: se vota desde la ficha de la canción (cajón). El ranking solo se toca para abrirla; lo que se empuja a hacer es jugar.
 - **Press / Disabled:** al pulsar baja 3px en 90ms con `ease-out-expo`; desactivado, gris al 70 % y brillo al 55 %.
 - **Focus:** contorno ámbar de 3px separado 3px.
 
@@ -253,6 +253,12 @@ Cajones que suben desde abajo, sobre un velo `ink` al 80 %. Filete cian de 4px a
 
 ### Ventanilla LED
 Pozo negro con 4px de radio y dígitos DSEG7 ámbar con halo. Los segmentos apagados ("8") se ven detrás al 9 %. Cuando la cifra cambia, destella (brillo ×2,2 que se apaga en 0,6 s). En los últimos 10 s la cuenta atrás pasa a rosa y late.
+
+### Rótulo de acción (Nudge)
+Pulsador ámbar a todo lo ancho bajo la ventana SUENA, con el titular en Bungee 26px y la acción debajo (rayo, texto y bombillas de energía). Dice a cada uno qué hacer: sin canción, «¿Quieres elegir la música? · Pide tu canción»; con canción, «¿Quieres que tu canción suene primero? · Juega a los minijuegos» (o «¡Vas primera! No te la quiten»). Respira en ámbar. En los últimos 10 s se vuelve rojo y apremia («¡Se acaba el tiempo! · Juega ya»).
+
+### Alarma de cierre (Urgency)
+En los últimos 10 s antes de cerrar las votaciones, con canciones en el ranking: viñeta roja que late sobre toda la pantalla (cada 0,5 s en los 3 últimos), la columna de contenido tiembla una vez por segundo (3,5 px; 7 px en los 3 últimos) y el móvil vibra (también más fuerte al final; iPhone no vibra desde la web). Los LED del tiempo pasan a **rojo** (`red`, #ff4d5e), no a rosa. Con movimiento reducido no hay temblor, solo la viñeta.
 
 ### Escalera de premios
 Una sola columna de cristal dentro de un bisel, un peldaño por canción. El #1 (o el lado A del duelo) es cristal encendido con la bombilla de su peldaño encendida; el rival es cristal rosa; el resto, cristal apagado. Durante el duelo los peldaños congelados bajan al 45 %. Cuando una canción suma, su peldaño y su bombilla destellan en ámbar (0,9 s). Los peldaños se reordenan con un muelle (380/32).

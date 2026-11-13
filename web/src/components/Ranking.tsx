@@ -54,14 +54,12 @@ function Rung({
   state,
   me,
   onSelect,
-  onSupport,
 }: {
   r: SongRequest
   pos: number
   state: PublicState
   me: MeState | null
   onSelect: (r: SongRequest) => void
-  onSupport: (id: string) => void
 }) {
   const reduce = useReducedMotion()
   const { duel, phase } = state
@@ -70,8 +68,6 @@ function Rung({
   const mine = me?.activeRequestId === r.id
   const myTeam = me?.teamId === r.id
   const lit = side === 'a' || (!side && pos === 1 && !frozen)
-  const ownOther = !!me?.activeRequestId && !mine
-  const canVote = !me?.votedThisRound && !frozen && !ownOther
 
   // La luz que sube: la bombilla y el peldaño destellan cuando suma puntos
   const prev = useRef(r.points)
@@ -131,19 +127,10 @@ function Rung({
           </span>
         </button>
 
-        <div className="relative flex shrink-0 flex-col items-stretch justify-center gap-1.5 py-2 pr-2">
+        <div className="relative flex shrink-0 flex-col items-stretch justify-center py-2 pr-2">
           <div className="led-well rounded-[4px] px-2 py-1.5 text-center">
             <Led value={r.points} digits={3} className="text-[17px]" flashOnChange />
           </div>
-          {canVote && (
-            <button
-              onClick={() => onSupport(r.id)}
-              className="pulsador h-8 bg-ink font-display text-[14px] text-amber ring-1 ring-amber/50 [--pulsador-glow:rgb(0_0_0/0.5)]"
-              aria-label={`Votar ${r.track.title}`}
-            >
-              +{phase === 'duel' ? 2 * state.multiplier : state.multiplier}
-            </button>
-          )}
         </div>
       </div>
       {mine && <MarkerCircle />}
@@ -157,12 +144,10 @@ export function Ranking({
   state,
   me,
   onSelect,
-  onSupport,
 }: {
   state: PublicState
   me: MeState | null
   onSelect: (r: SongRequest) => void
-  onSupport: (id: string) => void
 }) {
   if (state.ranking.length === 0) {
     return (
@@ -189,11 +174,11 @@ export function Ranking({
     )
   }
   return (
-    <div className="bezel rounded-machine p-[3px]">
+    <div id="ranking" className="bezel rounded-machine p-[3px]">
       <ol className="rounded-[4px] [&>li:first-child>div]:rounded-t-[4px] [&>li:last-child>div]:rounded-b-[4px]">
         <AnimatePresence initial={false}>
           {state.ranking.map((r, i) => (
-            <Rung key={r.id} r={r} pos={i + 1} state={state} me={me} onSelect={onSelect} onSupport={onSupport} />
+            <Rung key={r.id} r={r} pos={i + 1} state={state} me={me} onSelect={onSelect} />
           ))}
         </AnimatePresence>
       </ol>
