@@ -481,3 +481,16 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - **Más rojo:** el borde de la alarma pasa de 70 a 140 px de grosor (220 px en los 3 últimos segundos) y se añade un velo rojo sobre toda la pantalla. Comprobado en una captura de prueba: ahora se ve de sobra.
 - **Vibración:** Safari en iPhone no tiene `navigator.vibrate`. `vibrate()` (en `web/src/lib/util.ts`) usa ahora el toque háptico de un interruptor nativo (`<input switch>`, iOS 17.4+) cuando falta la vibración normal. Patrones más largos en la alarma (3 pulsos).
 - **Confirmado por Sergio (iPhone): no vibra.** iOS solo da el toque háptico dentro de un gesto del usuario (un toque), no desde un temporizador, así que en iPhone la alarma es solo visual. En Android sí vibra. Para vibrar en iPhone haría falta una app nativa (p. ej. envolver la web con Capacitor).
+
+## 13/11/2026 · Pruebas con Playwright y auditoría de seguridad
+
+- **Pruebas (Playwright CLI, simulador en el puerto 3100, datos temporales):** entrada y alias (incluido HTML en el nombre), ranking y equipos, los 7 minijuegos, selfie, panel de la dueña (PIN, bloquear, ajustes, happy hour, dosis, quitar canción, saltar, cerrar y abrir la noche), duelo con la alarma roja, 6 tamaños de pantalla y el cartel. Todo pasó; los fallos intermedios eran de las propias pruebas.
+- **Observación de producto:** nada en la pantalla del cliente avisa de que la happy hour está activa (solo cambia el «+2» de la ficha).
+- **Auditoría (`/security-audit`, perfil quick, informe en `C:\Users\sergi\security-audit-skill\pidecanciones_barmacia\run-1\REPORT.md`):**
+  1. **Alta:** el PIN de la dueña se adivina sin límite de intentos; por defecto es 1234 y `fly.toml` no lo define.
+  2. Media: identidades anónimas ilimitadas (se saltan límites por persona y baneos).
+  3. Media: los puntos de los minijuegos los informa el móvil.
+  4. Media: el token de administrador no caduca ni se revoca y sobrevive al cambio de PIN.
+  5. Pendiente de validar: agotar el cupo de Spotify con muchas búsquedas.
+- **Límites:** los validadores oficiales de la auditoría no funcionan en Windows (se pasó una comprobación propia); sin `npm audit` (sin red).
+- **Antes de publicar en Fly:** arreglar 1 y 4 (límite de intentos, `ADMIN_PIN` largo como secreto, caducidad y cierre de sesión de tokens).
