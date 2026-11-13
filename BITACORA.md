@@ -480,4 +480,4 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 
 - **Más rojo:** el borde de la alarma pasa de 70 a 140 px de grosor (220 px en los 3 últimos segundos) y se añade un velo rojo sobre toda la pantalla. Comprobado en una captura de prueba: ahora se ve de sobra.
 - **Vibración:** Safari en iPhone no tiene `navigator.vibrate`. `vibrate()` (en `web/src/lib/util.ts`) usa ahora el toque háptico de un interruptor nativo (`<input switch>`, iOS 17.4+) cuando falta la vibración normal. Patrones más largos en la alarma (3 pulsos).
-- **Pendiente de confirmar en el móvil de Sergio:** el háptico de iOS puede exigir un toque reciente en la pantalla; si no vibra, no hay más remedio en una web (haría falta app nativa).
+- **Confirmado por Sergio (iPhone): no vibra.** iOS solo da el toque háptico dentro de un gesto del usuario (un toque), no desde un temporizador, así que en iPhone la alarma es solo visual. En Android sí vibra. Para vibrar en iPhone haría falta una app nativa (p. ej. envolver la web con Capacitor).
