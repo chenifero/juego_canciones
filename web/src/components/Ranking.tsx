@@ -28,25 +28,6 @@ export function TeamBubbles({ by, team, total, size = 22 }: { by?: PublicUser; t
   )
 }
 
-/** Bombilla del peldaño. Destella cuando la canción suma. */
-function RungLamp({ on, flash }: { on: boolean; flash: number }) {
-  return (
-    <span className="relative grid w-10 shrink-0 place-items-center self-stretch border-r border-print/50">
-      <span className={cx('size-3.5', on ? 'bulb-on' : 'bulb')} />
-      {flash > 0 && (
-        <motion.span
-          key={flash}
-          className="bulb-on absolute size-3.5"
-          initial={{ opacity: 1, scale: 1.6 }}
-          animate={{ opacity: 0, scale: 1 }}
-          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-          aria-hidden
-        />
-      )}
-    </span>
-  )
-}
-
 /** Un peldaño de la escalera de premios. */
 function Rung({
   r,
@@ -69,7 +50,7 @@ function Rung({
   const myTeam = me?.teamId === r.id
   const lit = side === 'a' || (!side && pos === 1 && !frozen)
 
-  // La luz que sube: la bombilla y el peldaño destellan cuando suma puntos
+  // La luz que sube: el peldaño destella cuando suma puntos
   const prev = useRef(r.points)
   const [flash, setFlash] = useState(0)
   useEffect(() => {
@@ -101,13 +82,18 @@ function Rung({
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
           />
         )}
-        <RungLamp on={lit || side === 'b'} flash={flash} />
         <button
           onClick={() => onSelect(r)}
-          className="relative flex min-w-0 flex-1 items-center gap-2 py-2 pl-1.5 text-left"
+          className="relative flex min-w-0 flex-1 items-center gap-2 py-2 pl-1 text-left"
           aria-label={`Puesto ${pos}: ${r.track.title}, ${r.points} puntos`}
         >
-          <span className={cx('w-5 shrink-0 text-center font-display text-[20px] leading-none', onGlass ? 'text-print' : 'text-cyan')}>
+          <span
+            className={cx(
+              'w-11 shrink-0 text-center font-display leading-none tabular-nums',
+              pos >= 10 ? 'text-[26px]' : 'text-[36px]',
+              onGlass ? 'text-print' : 'text-cyan',
+            )}
+          >
             {pos}
           </span>
           <span className="relative shrink-0">
@@ -156,10 +142,7 @@ export function Ranking({
           <ol className="overflow-hidden rounded-[4px]" aria-label="Ranking vacío">
             {[1, 2, 3].map((n) => (
               <li key={n} className="glass-dim flex h-[64px] items-center border-b border-print/60 last:border-b-0">
-                <span className="grid w-10 place-items-center self-stretch border-r border-print/50">
-                  <span className="bulb size-3.5" />
-                </span>
-                <span className="w-9 text-center font-display text-[22px] text-cyan/50">{n}</span>
+                <span className="ml-1 w-11 text-center font-display text-[36px] leading-none text-cyan/50">{n}</span>
                 <span className="size-[44px] rounded-[3px] bg-print/50" />
               </li>
             ))}

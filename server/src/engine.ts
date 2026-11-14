@@ -165,6 +165,8 @@ export class Engine {
   private lastLock: { winnerId: string; loserId: string | null; loserPoints: number; duel: DuelInfo | null } | null = null
   private voted = new Set<string>()
   private energyUsed = new Map<string, number>()
+  /** Partidas del VS que lleva cada jugador (índice en duel.games). */
+  private duelPlays = new Map<string, number>()
   /** Puntos de juego (antes de multiplicadores) que lleva cada jugador esta ronda. */
   private gamePoints = new Map<string, number>()
   private sessions = new Map<string, Session>()
@@ -433,6 +435,21 @@ export class Engine {
 
   // ───────────────────────── minijuegos ─────────────────────────
 
+  /** Orden aleatorio de los juegos que caben en el VS (con su cuenta atrás). */
+  private duelGames(): GameId[] {
+    const fit = GAME_IDS.filter((g) => GAME_COUNTDOWN_MS + GAME_DURATION[g] <= this.settings.duelWindowMs)
+    for (let i = fit.length - 1; i > 0; i--) {
+      const j = randomInt(i + 1)
+      ;[fit[i], fit[j]] = [fit[j]!, fit[i]!]
+    }
+    return fit
+  }
+
+  /** ¿Juega este usuario en el VS (su equipo es una de las dos finalistas)? */
+  inDuel(u: User): boolean {
+    return this.phase === 'duel' && !!this.duel && !!u.teamId && (u.teamId === this.duel.aId || u.teamId === this.duel.bId)
+  }
+
   energyLeft(u: User): number {
     return Math.max(0, this.settings.energyPerRound - (this.energyUsed.get(u.id) ?? 0))
   }
@@ -448,8 +465,8 @@ export class Engine {
 
   /** `pool`: canciones de reserva para montar las preguntas (solo en carátula y trivia). */
   startGame(u: User, game: unknown, pool: TrackInfo[] = [], albums: AlbumInfo[] = []): GameSession {
-    if (!GAME_IDS.includes(game as GameId)) throw new GameError('Juego desconocido')
-    const g = game as GameId
+    const duel = this.inDuel(u)
+    if (!duel && !GAME_IDS.includes(game as GameId)) throw new GameError('Juego desconocido')
     const r = u.teamId ? this.requests.get(u.teamId) : undefined
     if (!r) throw new GameError('Primero pide una canción o únete a un equipo', 'NO_TEAM')
     if (this.frozen(r)) {
@@ -458,14 +475,45 @@ export class Engine {
         'FROZEN',
       )
     }
-    if (this.energyLeft(u) <= 0) throw new GameError('Sin energía: se recarga con la siguiente canción', 'NO_ENERGY')
-    let quiz: BuiltRound[] | undefined
-    if (g === 'cover' || g === 'trivia') {
-      const built = g === 'cover' ? buildCoverQuiz(albums) : buildTriviaQuiz(poolEntries([...this.tracksTonight(), ...pool]))
-      if (!built) throw new GameError('Aún no hay datos suficientes para este juego. Prueba otro', 'NO_POOL')
-      quiz = built
+    if (!duel && this.energyLeft(u) <= 0) throw new GameError('Sin energía: se recarga con la siguiente canción', 'NO_ENERGY')
+
+    const buildQuiz = (g: GameId): BuiltRound[] | null | undefined => {
+      if (g === 'cover') return buildCoverQuiz(albums)
+      if (g === 'trivia') return buildTriviaQuiz(poolEntries([...this.tracksTonight(), ...pool]))
+      return undefined
     }
-    this.energyUsed.set(u.id, (this.energyUsed.get(u.id) ?? 0) + 1)
+
+    let g: GameId
+    let quiz: BuiltRound[] | undefined
+    if (duel) {
+      // VS: el siguiente de la lista sorpresa. Si es de preguntas y no hay datos, se pasa al siguiente
+      // (los datos son los mismos para todos, así que los dos equipos saltan igual)
+      const games = this.duel!.games
+      if (!games.length) throw new GameError('El VS es demasiado corto para jugar', 'NO_TIME')
+      let k = this.duelPlays.get(u.id) ?? 0
+      let picked: { g: GameId; quiz: BuiltRound[] | undefined } | null = null
+      for (let tries = 0; tries < games.length && !picked; tries++, k++) {
+        const cand = games[k % games.length]!
+        const built = buildQuiz(cand)
+        if (built !== null) picked = { g: cand, quiz: built }
+      }
+      if (!picked) throw new GameError('Aún no hay datos suficientes para jugar', 'NO_POOL')
+      g = picked.g
+      quiz = picked.quiz
+      // Solo se empieza si da tiempo a terminarla antes de que se acabe el VS
+      const end = this.lockAt() ?? this.duel!.startsAt + this.settings.duelWindowMs
+      if (Date.now() + GAME_COUNTDOWN_MS + GAME_DURATION[g] > end) {
+        throw new GameError('No da tiempo a otro juego antes de que acabe el VS', 'NO_TIME')
+      }
+      // Las partidas del VS no gastan créditos: saltan solas
+      this.duelPlays.set(u.id, k)
+    } else {
+      g = game as GameId
+      const built = buildQuiz(g)
+      if (built === null) throw new GameError('Aún no hay datos suficientes para este juego. Prueba otro', 'NO_POOL')
+      quiz = built
+      this.energyUsed.set(u.id, (this.energyUsed.get(u.id) ?? 0) + 1)
+    }
     const s: Session = {
       id: id(8),
       userId: u.id,
@@ -485,6 +533,7 @@ export class Engine {
       startsAt: s.startsAt,
       durationMs: s.durationMs,
       quiz: quiz?.map((q) => q.round),
+      duel: duel || undefined,
     }
   }
 
@@ -680,7 +729,8 @@ export class Engine {
         this.duel && this.requests.get(this.duel.aId)?.status === 'waiting' && this.requests.get(this.duel.bId)?.status === 'waiting'
       if (!stillValid) {
         const lockAt = pb.at + remaining - s.lockBeforeEndMs
-        this.duel = { aId: ranking[0]!.id, bId: ranking[1]!.id, startsAt: lockAt - s.duelWindowMs }
+        this.duel = { aId: ranking[0]!.id, bId: ranking[1]!.id, startsAt: lockAt - s.duelWindowMs, games: this.duelGames() }
+        this.duelPlays.clear()
       }
       this.phase = 'duel'
       return null
@@ -768,6 +818,7 @@ export class Engine {
     this.round++
     this.voted.clear()
     this.energyUsed.clear()
+    this.duelPlays.clear()
     this.gamePoints.clear()
     this.sessions.clear()
     this.phase = 'open'

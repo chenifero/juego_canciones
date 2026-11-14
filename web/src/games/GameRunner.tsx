@@ -1,4 +1,4 @@
-import { X } from '@phosphor-icons/react'
+import { Shuffle, X } from '@phosphor-icons/react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { GameId, GameResult, GameSession, MeState, PublicState } from '../../../shared/types.ts'
@@ -97,6 +97,24 @@ export function GameRunner({
     return () => cancelAnimationFrame(raf)
   }, [session])
 
+  // En el VS, tras el resultado salta el siguiente juego sorpresa (si da tiempo; si no, el servidor lo dice y se sale)
+  const duelNext = stage === 'result' && !!session?.duel && state.phase === 'duel'
+  const [nextIn, setNextIn] = useState(3)
+  useEffect(() => {
+    if (!duelNext || !session) return
+    setNextIn(3)
+    let n = 3
+    const t = setInterval(() => {
+      n -= 1
+      setNextIn(n)
+      if (n <= 0) {
+        clearInterval(t)
+        onAgain(session.game)
+      }
+    }, 1_000)
+    return () => clearInterval(t)
+  }, [duelNext, session, onAgain])
+
   const onDone = useCallback(
     async (score: number) => {
       if (!session) return
@@ -113,7 +131,17 @@ export function GameRunner({
     [session],
   )
 
-  const ResultButtons = () => (
+  const ResultButtons = () =>
+    duelNext ? (
+      <div className={cx('grid w-full max-w-xs gap-3', session?.game === 'tap' ? 'mb-2' : 'mt-8')}>
+        <p className="pulsador flex h-16 items-center justify-center gap-3 bg-amber font-display text-[18px] text-print" role="status">
+          <Shuffle size={24} weight="bold" aria-hidden /> Siguiente juego en {Math.max(0, nextIn)}
+        </p>
+        <button disabled={!armed} onClick={onClose} className={cx('pulsador h-14 bg-panel-2 font-display text-[16px]', !armed && 'opacity-40')}>
+          Salir del VS
+        </button>
+      </div>
+    ) : (
     <div className={cx('grid w-full max-w-xs gap-3 transition-opacity', session?.game === 'tap' ? 'mb-2' : 'mt-8', !armed && 'opacity-40')}>
       {(me?.energy ?? 0) > 0 && session && (
         <button
@@ -129,7 +157,7 @@ export function GameRunner({
         Volver
       </button>
     </div>
-  )
+    )
 
   const info = session ? GAMES[session.game] : null
   const Glyph = session ? GAME_ICON[session.game] : null
@@ -174,6 +202,11 @@ export function GameRunner({
                     </motion.span>
                   </AnimatePresence>
                   <p className="mt-8 max-w-xs text-[18px] font-semibold text-paper/80">{info.desc}</p>
+                  {session.duel && (
+                    <p className="mt-4 flex items-center gap-2 rounded-full bg-red px-4 py-2 font-display text-[14px] text-print">
+                      <Shuffle size={18} weight="bold" aria-hidden /> Juego sorpresa del VS · puntos ×2
+                    </p>
+                  )}
                 </div>
               </div>
             )}

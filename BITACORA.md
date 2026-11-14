@@ -558,3 +558,14 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - **Machaca:** al terminar, los botones «Otra vez» y «Volver» salían donde estaba el botón gordo y se pulsaban sin querer. Ahora en Machaca van **arriba**, y en todos los juegos los botones del final no responden durante el primer segundo (se ven apagados).
 - **Corte de partida (`GameRunner`):** si la partida empezó durante el VS y el VS termina, te saca del juego con el aviso «¡Se acabó el VS! La partida ya no suma». También te saca si tu canción deja de estar en el ranking (pasa a la cola o la dueña la quita).
 - Comprobado en local: Machaca con los botones arriba (un toque en el sitio del botón gordo no pulsa nada) y corte al quitar la canción. El corte por fin del VS usa el mismo mecanismo, pero no se ha visto en directo. `npm test` en verde.
+
+## 14/11/2026 · Ajustes con «Guardar», ranking sin bombilla y juegos sorpresa en el VS
+
+- **Panel de la dueña · Ajustes:** los cambios ya no se aplican al tocar − / +. Se preparan y se aplican al pulsar **Guardar** (barra fija abajo, con «N cambios sin guardar» y «Descartar»). Al guardar se aplican al instante en todo el juego (el servidor reparte estado a todos los móviles). Cerrar el cajón sin guardar descarta los cambios.
+- **Ranking:** fuera la bombilla de cada peldaño; el número del puesto pasa a 36 px (26 px a partir del 10).
+- **VS con juegos sorpresa:**
+  - Al empezar el VS, el servidor sortea el orden de los juegos que caben en la duración del VS (`duel.games`). La partida n de cada jugador es `games[n]`, así que **los dos equipos juegan al mismo juego y en el mismo orden**. Si toca Carátula o Trivia y no hay datos, los dos saltan al siguiente.
+  - A quien está en un equipo finalista **le salta solo** el juego (aviso «Juego sorpresa del VS · puntos ×2»). Al terminar, «Siguiente juego en 3…» y salta otro si da tiempo; si no da tiempo a terminarlo, no empieza y se sale. Con «Salir del VS» (o la X) deja de saltar en ese VS; puede volver con «Jugar».
+  - Las partidas del VS **no gastan créditos** (siguen el tope de 15 puntos de juego por ronda y el ×2 del duelo).
+  - Fuera del VS se sigue eligiendo el juego como antes.
+- **Pruebas:** nueva `server/scripts/duel-games.ts` (mismo juego y orden para los dos equipos, sin gastar créditos, no empieza si no da tiempo), incluida en `npm test`. Visto en local: ranking nuevo y Guardar del panel (la dosis pasa de 15 a 20 solo al guardar). El salto automático del VS no se ha visto en directo con dos móviles.

@@ -12,7 +12,7 @@
     "build": "npm run build -w web",
     "typecheck": "npm run typecheck -w server && npm run typecheck -w web",
     "start": "npm run start -w server",
-    "test": "node server/scripts/smoke.ts"
+    "test": "node server/scripts/smoke.ts && node server/scripts/duel-games.ts"
   },
   "devDependencies": {
     "concurrently": "^10.0.7"

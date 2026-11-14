@@ -38,7 +38,9 @@ export function Nudge({
   let out = false
 
   if (mineIdx >= 0) {
-    out = me.energy <= 0
+    // En el VS las partidas son sorpresa y no gastan créditos
+    const finalist = state.phase === 'duel' && !!state.duel && (myId === state.duel.aId || myId === state.duel.bId)
+    out = me.energy <= 0 && !finalist
     if (urgent) {
       title = mineIdx === 0 ? '¡Defiéndela!' : '¡Se acaba el tiempo!'
       action = out ? 'Sin partidas' : 'Juega ya'

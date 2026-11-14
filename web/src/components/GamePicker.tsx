@@ -1,4 +1,4 @@
-import { Cards, HandFist, ImageSquare, Question, Target, Timer, TrafficSignal, type Icon } from '@phosphor-icons/react'
+import { Cards, HandFist, ImageSquare, Question, Shuffle, Target, Timer, TrafficSignal, type Icon } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
 import type { GameId, MeState, PublicState } from '../../../shared/types.ts'
 import { GAMES, cx } from '../lib/util.ts'
@@ -57,6 +57,18 @@ export function GamePicker({
               {mult > 1 && <span className="font-display text-[12px]">Puntos ×{mult}</span>}
             </div>
           </div>
+          {duelX ? (
+            <div className="py-2 text-center">
+              <p className="font-display text-[20px] leading-tight">En el VS el juego es sorpresa</p>
+              <p className="mt-2 text-[15px] text-mute">Los dos equipos juegan al mismo, puntos ×2 y sin gastar partidas.</p>
+              <button
+                onClick={() => onStart('tap')}
+                className="pulsador mt-5 flex h-16 w-full items-center justify-center gap-3 bg-amber font-display text-[20px] text-print [--pulsador-glow:rgb(255_194_61/0.5)]"
+              >
+                <Shuffle size={26} weight="bold" aria-hidden /> ¡Juego sorpresa!
+              </button>
+            </div>
+          ) : (
           <div className="grid grid-cols-3 gap-2.5">
             {(Object.keys(GAMES) as GameId[]).map((id, i, all) => {
               const g = GAMES[id]
@@ -97,7 +109,8 @@ export function GamePicker({
               )
             })}
           </div>
-          {empty && <p className="mt-4 text-center text-[15px] text-mute">Sin créditos. Se recargan con la siguiente canción.</p>}
+          )}
+          {empty && !duelX && <p className="mt-4 text-center text-[15px] text-mute">Sin créditos. Se recargan con la siguiente canción.</p>}
         </>
       )}
     </Sheet>

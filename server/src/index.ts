@@ -318,8 +318,10 @@ io.on('connection', (socket) => {
   on(socket, 'support', (p) => engine.support(me(), p.requestId))
   on(socket, 'game:start', async (p) => {
     const u = me()
-    const pool = p.game === 'trivia' ? await ensureQuizPool() : []
-    const albums = p.game === 'cover' ? await famousAlbums(music, MIN_ARTISTS) : []
+    // En el VS el juego lo decide el servidor (sorpresa, igual para los dos equipos): se preparan los datos de los dos de preguntas
+    const duel = engine.inDuel(u)
+    const pool = duel || p.game === 'trivia' ? await ensureQuizPool() : []
+    const albums = duel || p.game === 'cover' ? await famousAlbums(music, MIN_ARTISTS) : []
     return engine.startGame(u, p.game, pool, albums)
   })
   on(socket, 'game:answer', (p) => engine.answerQuiz(me(), p.sessionId, p.choice, p.ms))

@@ -158,7 +158,6 @@ export function DuelOverlay({
                     {me?.votedThisRound ? 'Votado' : `Votar +${vote}`}
                   </button>
                   <button
-                    disabled={(me?.energy ?? 0) <= 0}
                     onClick={onPlay}
                     className="pulsador flex h-16 items-center justify-center gap-2 bg-amber font-display text-[17px] text-print"
                   >

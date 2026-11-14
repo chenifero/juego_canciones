@@ -61,6 +61,8 @@ export interface DuelInfo {
   aId: string
   bId: string
   startsAt: number
+  /** Juegos sorpresa del VS, en orden: la partida n de cada jugador es games[n]. Igual para los dos equipos. */
+  games: GameId[]
 }
 
 export interface PublicState {
@@ -148,6 +150,8 @@ export interface GameSession {
   startsAt: number
   durationMs: number
   quiz?: QuizRound[]
+  /** Partida sorpresa del VS (no gasta créditos). */
+  duel?: boolean
 }
 
 export interface GameResult {

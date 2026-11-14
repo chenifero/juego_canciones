@@ -84,14 +84,52 @@ export function Home({
     }
   }, [])
 
-  const play = useCallback(async (game: GameId) => {
-    const s = await startGame(game)
-    if (s) {
+  const starting = useRef(false)
+  const play = useCallback(async (game: GameId): Promise<boolean> => {
+    if (starting.current) return false
+    starting.current = true
+    try {
+      const s = await startGame(game)
+      if (!s) return false
       setPickerOpen(false)
       setSelected(null)
       setSession(s)
+      return true
+    } finally {
+      starting.current = false
     }
   }, [])
+
+  // VS: si tu equipo es finalista, salta solo un juego sorpresa (el servidor lo elige, igual para los dos equipos).
+  // Si cierras el juego, no vuelve a saltar en este VS (puedes volver con «Jugar»).
+  const inDuelTeam =
+    state.phase === 'duel' && !!state.duel && !!me.teamId && (me.teamId === state.duel.aId || me.teamId === state.duel.bId)
+  const [duelOptOut, setDuelOptOut] = useState<string | null>(null)
+  useEffect(() => {
+    if (!inDuelTeam || !duelKey || session || duelOptOut === duelKey) return
+    void play('tap').then((ok) => {
+      if (!ok) setDuelOptOut(duelKey)
+    })
+  }, [inDuelTeam, duelKey, session, duelOptOut, play])
+  const playDuel = useCallback(() => {
+    setDuelOptOut(null)
+    void play('tap')
+  }, [play])
+  const closeGame = useCallback(() => {
+    if (session?.duel && duelKey) setDuelOptOut(duelKey)
+    setSession(null)
+  }, [session, duelKey])
+  const nextGame = useCallback(
+    async (game: GameId) => {
+      const ok = await play(game)
+      // En el VS, si ya no da tiempo a otro, se sale del juego
+      if (!ok && session?.duel) {
+        if (duelKey) setDuelOptOut(duelKey)
+        setSession(null)
+      }
+    },
+    [play, session, duelKey],
+  )
 
   return (
     <div className="mx-auto min-h-[100dvh] max-w-lg px-4 pb-48 safe-top">
@@ -186,9 +224,9 @@ export function Home({
         open={duelOpen}
         onMinimize={() => setDismissedDuel(duelKey)}
         onSupport={support}
-        onPlay={() => setPickerOpen(true)}
+        onPlay={playDuel}
       />
-      <GameRunner session={session} state={state} me={me} onClose={() => setSession(null)} onAgain={play} />
+      <GameRunner session={session} state={state} me={me} onClose={closeGame} onAgain={nextGame} />
       <WinnerOverlay />
     </div>
   )

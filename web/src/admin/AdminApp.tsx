@@ -283,7 +283,6 @@ function Panel({ state, admin, connected, onLogout }: { state: PublicState; admi
       toast((e as Error).message, 'error', 5000)
     }
   }, [])
-  const setSettings = (patch: Partial<Settings>) => act('admin:settings', { settings: patch })
 
   async function giveDose() {
     try {
@@ -464,7 +463,7 @@ function Panel({ state, admin, connected, onLogout }: { state: PublicState; admi
 
       <RankingDrawer open={drawer === 'ranking'} onClose={() => setDrawer(null)} state={state} admin={admin} act={act} />
       <PeopleDrawer open={drawer === 'gente'} onClose={() => setDrawer(null)} admin={admin} act={act} />
-      <SettingsDrawer open={drawer === 'ajustes'} onClose={() => setDrawer(null)} state={state} admin={admin} setSettings={setSettings} act={act} />
+      <SettingsDrawer open={drawer === 'ajustes'} onClose={() => setDrawer(null)} state={state} admin={admin} />
       <DoseModal dose={dose} onClose={() => setDose(null)} />
     </div>
   )
@@ -595,16 +594,37 @@ function SettingsDrawer({
   onClose,
   state,
   admin,
-  setSettings,
 }: {
   open: boolean
   onClose: () => void
   state: PublicState
   admin: AdminFull
-  setSettings: (p: Partial<Settings>) => void
-  act: Act
 }) {
-  const s = admin.settings
+  // Los cambios se preparan aquí y solo se aplican al pulsar «Guardar» (al instante, en todo el juego)
+  const [draft, setDraft] = useState<Partial<Settings>>({})
+  const [saving, setSaving] = useState(false)
+  useEffect(() => {
+    if (open) setDraft({})
+  }, [open])
+  const s: Settings = { ...admin.settings, ...draft }
+  const changed = (Object.keys(draft) as (keyof Settings)[]).filter((k) => draft[k] !== admin.settings[k])
+  const setSettings = (patch: Partial<Settings>) => setDraft((d) => ({ ...d, ...patch }))
+
+  async function save() {
+    if (!changed.length || saving) return
+    setSaving(true)
+    try {
+      const patch = Object.fromEntries(changed.map((k) => [k, draft[k]])) as Partial<Settings>
+      await adminEmit('admin:settings', { settings: patch })
+      setDraft({})
+      vibrate(20)
+      toast('Ajustes guardados: ya se aplican en todo el juego', 'ok')
+    } catch (e) {
+      toast((e as Error).message, 'error', 5000)
+    } finally {
+      setSaving(false)
+    }
+  }
   return (
     <Sheet open={open} onClose={onClose} title="Ajustes" tall>
       <section className="bezel rounded-machine p-3">
@@ -656,6 +676,30 @@ function SettingsDrawer({
       <a href="/cartel" target="_blank" rel="noreferrer" className="pulsador bezel mt-4 flex h-14 items-center justify-center gap-3 font-display text-[15px]">
         <Printer size={22} weight="bold" aria-hidden /> Imprimir el cartel
       </a>
+
+      {/* Guardar: fijo abajo mientras haya cambios sin aplicar */}
+      <div className="sticky bottom-0 -mx-4 mt-4 bg-gradient-to-t from-ink from-75% to-transparent px-4 pb-2 pt-6">
+        {changed.length > 0 && (
+          <p className="mb-2 text-center text-[13px] font-bold text-amber" role="status">
+            {changed.length === 1 ? '1 cambio sin guardar' : `${changed.length} cambios sin guardar`}
+          </p>
+        )}
+        <div className="grid grid-cols-[1fr_2fr] gap-3">
+          <button disabled={!changed.length || saving} onClick={() => setDraft({})} className="pulsador h-14 bg-panel-2 font-display text-[15px]">
+            Descartar
+          </button>
+          <button
+            disabled={!changed.length || saving}
+            onClick={() => void save()}
+            className={cx(
+              'pulsador h-14 font-display text-[18px]',
+              changed.length ? 'bg-amber text-print [--pulsador-glow:rgb(255_194_61/0.55)]' : 'bg-panel-2',
+            )}
+          >
+            {saving ? 'Guardando' : changed.length ? 'Guardar' : 'Sin cambios'}
+          </button>
+        </div>
+      </div>
     </Sheet>
   )
 }
