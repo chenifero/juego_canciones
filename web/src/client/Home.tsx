@@ -188,7 +188,7 @@ export function Home({
         onSupport={support}
         onPlay={() => setPickerOpen(true)}
       />
-      <GameRunner session={session} me={me} onClose={() => setSession(null)} onAgain={play} />
+      <GameRunner session={session} state={state} me={me} onClose={() => setSession(null)} onAgain={play} />
       <WinnerOverlay />
     </div>
   )

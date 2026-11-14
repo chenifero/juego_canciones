@@ -552,3 +552,9 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - El contenedor arranca con `docker-entrypoint.sh`: da la carpeta `/data` (volumen que Fly monta como root) al usuario `node` y arranca Node como `node` con `su-exec`. Así el proceso del servidor nunca tiene permisos de root.
 - Comprobado en Fly (`fly ssh console`): `node server/src/index.ts` corre como `node`, `/data` es de `node`, el estado y la conexión de Spotify se conservan y la web responde 200.
 - Con esto se cierra lo pendiente de la auditoría salvo las cabeceras de seguridad.
+
+## 14/11/2026 · Minijuegos: botones del final y corte al acabar el VS
+
+- **Machaca:** al terminar, los botones «Otra vez» y «Volver» salían donde estaba el botón gordo y se pulsaban sin querer. Ahora en Machaca van **arriba**, y en todos los juegos los botones del final no responden durante el primer segundo (se ven apagados).
+- **Corte de partida (`GameRunner`):** si la partida empezó durante el VS y el VS termina, te saca del juego con el aviso «¡Se acabó el VS! La partida ya no suma». También te saca si tu canción deja de estar en el ranking (pasa a la cola o la dueña la quita).
+- Comprobado en local: Machaca con los botones arriba (un toque en el sitio del botón gordo no pulsa nada) y corte al quitar la canción. El corte por fin del VS usa el mismo mecanismo, pero no se ha visto en directo. `npm test` en verde.

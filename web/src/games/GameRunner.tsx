@@ -1,13 +1,13 @@
 import { X } from '@phosphor-icons/react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useCallback, useEffect, useState } from 'react'
-import type { GameId, GameResult, GameSession, MeState } from '../../../shared/types.ts'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import type { GameId, GameResult, GameSession, MeState, PublicState } from '../../../shared/types.ts'
 import { GAME_ICON } from '../components/GamePicker.tsx'
 import { Bulbs, Led } from '../components/machine.tsx'
 import { toast } from '../components/Toasts.tsx'
 import { emit } from '../lib/socket.ts'
 import { serverNow } from '../lib/store.ts'
-import { GAMES, vibrate } from '../lib/util.ts'
+import { GAMES, cx, vibrate } from '../lib/util.ts'
 import { MemoryGame } from './MemoryGame.tsx'
 import { QuizGame } from './QuizGame.tsx'
 import { ReflexGame } from './ReflexGame.tsx'
@@ -31,11 +31,13 @@ type Stage = 'countdown' | 'play' | 'sending' | 'result'
 /** Pantalla completa de juego bonus: cuenta atrás, juego y premio. */
 export function GameRunner({
   session,
+  state,
   me,
   onClose,
   onAgain,
 }: {
   session: GameSession | null
+  state: PublicState
   me: MeState | null
   onClose: () => void
   onAgain: (game: GameId) => void
@@ -43,6 +45,32 @@ export function GameRunner({
   const [stage, setStage] = useState<Stage>('countdown')
   const [count, setCount] = useState(3)
   const [result, setResult] = useState<GameResult | null>(null)
+  /** Los botones del final no responden el primer segundo: tras machacar, el dedo sigue tocando. */
+  const [armed, setArmed] = useState(false)
+  /** ¿Empezó la partida durante el VS? Entonces, al acabarse el VS, se corta. */
+  const startedInDuel = useRef(false)
+
+  useEffect(() => {
+    if (stage !== 'result') return setArmed(false)
+    const t = setTimeout(() => setArmed(true), 1_000)
+    return () => clearTimeout(t)
+  }, [stage])
+
+  useEffect(() => {
+    if (session) startedInDuel.current = state.phase === 'duel'
+    // Solo al empezar cada partida
+  }, [session])
+
+  // Fin del VS (o la canción ya cerrada): te saca del juego, que ya no puede sumar
+  const duelOver = startedInDuel.current && state.phase !== 'duel'
+  const songGone = !!session && !state.ranking.some((r) => r.id === session.requestId)
+  const cut = !!session && (stage === 'countdown' || stage === 'play') && (duelOver || songGone)
+  useEffect(() => {
+    if (!cut) return
+    vibrate([60, 40, 60])
+    toast(duelOver ? '¡Se acabó el VS! La partida ya no suma' : 'Tu canción ya no está en juego: partida terminada', 'error', 4000)
+    onClose()
+  }, [cut, duelOver, onClose])
 
   useEffect(() => {
     if (!session) return
@@ -83,6 +111,24 @@ export function GameRunner({
       setStage('result')
     },
     [session],
+  )
+
+  const ResultButtons = () => (
+    <div className={cx('grid w-full max-w-xs gap-3 transition-opacity', session?.game === 'tap' ? 'mb-2' : 'mt-8', !armed && 'opacity-40')}>
+      {(me?.energy ?? 0) > 0 && session && (
+        <button
+          disabled={!armed}
+          onClick={() => onAgain(session.game)}
+          className="pulsador flex h-16 items-center justify-center gap-3 bg-amber font-display text-[18px] text-print"
+        >
+          Otra vez
+          <Bulbs count={me?.maxEnergy ?? 3} lit={me?.energy ?? 0} size={8} className="w-14" />
+        </button>
+      )}
+      <button disabled={!armed} onClick={onClose} className="pulsador h-14 bg-panel-2 font-display text-[16px]">
+        Volver
+      </button>
+    </div>
   )
 
   const info = session ? GAMES[session.game] : null
@@ -138,35 +184,27 @@ export function GameRunner({
               </div>
             )}
             {stage === 'result' && result && (
-              <div className="grid h-full place-items-center text-center">
-                <div className="flex flex-col items-center">
-                  <motion.p
-                    initial={{ scale: 2, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: 'spring', stiffness: 260, damping: 14 }}
-                    className={`font-display text-[44px] leading-none ${result.points > 0 ? 'text-amber' : 'text-paper/50'}`}
-                  >
-                    {result.points > 0 ? '¡Premio!' : 'Casi'}
-                  </motion.p>
-                  <span className="led-well mt-5 rounded-[8px] px-6 py-4">
-                    <Led value={result.points} digits={2} className="text-[80px]" />
-                  </span>
-                  <p className="mx-auto mt-5 max-w-xs text-[16px] text-paper/80">{result.message}</p>
-                  <div className="mt-8 grid w-full max-w-xs gap-3">
-                    {(me?.energy ?? 0) > 0 && (
-                      <button
-                        onClick={() => onAgain(session.game)}
-                        className="pulsador flex h-16 items-center justify-center gap-3 bg-amber font-display text-[18px] text-print"
-                      >
-                        Otra vez
-                        <Bulbs count={me?.maxEnergy ?? 3} lit={me?.energy ?? 0} size={8} className="w-14" />
-                      </button>
-                    )}
-                    <button onClick={onClose} className="pulsador h-14 bg-panel-2 font-display text-[16px]">
-                      Volver
-                    </button>
-                  </div>
-                </div>
+              <div
+                className={cx(
+                  'flex h-full flex-col items-center text-center',
+                  // En Machaca los botones van arriba, lejos de donde estaba el botón gordo
+                  session.game === 'tap' ? 'justify-start pt-2' : 'justify-center',
+                )}
+              >
+                {session.game === 'tap' && <ResultButtons />}
+                <motion.p
+                  initial={{ scale: 2, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 260, damping: 14 }}
+                  className={cx('font-display text-[44px] leading-none', result.points > 0 ? 'text-amber' : 'text-paper/50', session.game === 'tap' && 'mt-8')}
+                >
+                  {result.points > 0 ? '¡Premio!' : 'Casi'}
+                </motion.p>
+                <span className="led-well mt-5 rounded-[8px] px-6 py-4">
+                  <Led value={result.points} digits={2} className="text-[80px]" />
+                </span>
+                <p className="mx-auto mt-5 max-w-xs text-[16px] text-paper/80">{result.message}</p>
+                {session.game !== 'tap' && <ResultButtons />}
               </div>
             )}
           </div>
