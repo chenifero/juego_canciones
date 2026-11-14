@@ -89,6 +89,9 @@ export interface MeState {
   /** Epoch ms a partir del cual puede volver a pedir (0 = ya puede). */
   nextRequestAt: number
   requestsLastHour: number
+  /** Por qué espera para pedir: el tope de canciones por hora o la espera tras sonar la suya. */
+  waitReason: 'hour' | 'cooldown' | null
+  maxPerHour: number
   energy: number
   maxEnergy: number
 }

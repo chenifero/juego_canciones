@@ -277,12 +277,24 @@ function Deck({
           <br />
           en
         </span>
-        <span className="led-well rounded-[4px] px-2 py-1.5">
-          <Led value={fmtTime(wait)} className="text-[22px]" />
+        <span className="flex flex-col items-center gap-1">
+          <span className="led-well rounded-[4px] px-2 py-1.5">
+            <Led value={fmtTime(wait)} className="text-[22px]" />
+          </span>
+          <span className="text-[11px] font-bold leading-none text-print/75">
+            {me.waitReason === 'hour' ? `Máx. ${me.maxPerHour} por hora` : 'Tras sonar la tuya'}
+          </span>
         </span>
       </span>
     )
-    action = () => toast('Mientras, vota y juega para otras canciones', 'info')
+    action = () =>
+      toast(
+        me.waitReason === 'hour'
+          ? `Has pedido ${me.maxPerHour} canciones en la última hora, el máximo. Mientras, vota y juega para otras`
+          : 'Acaba de sonar la tuya: espera un poco. Mientras, vota y juega para otras canciones',
+        'info',
+        5000,
+      )
   } else {
     face = (
       <span className="flex items-center gap-2.5">

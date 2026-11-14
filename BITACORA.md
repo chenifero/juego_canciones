@@ -569,3 +569,9 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
   - Las partidas del VS **no gastan créditos** (siguen el tope de 15 puntos de juego por ronda y el ×2 del duelo).
   - Fuera del VS se sigue eligiendo el juego como antes.
 - **Pruebas:** nueva `server/scripts/duel-games.ts` (mismo juego y orden para los dos equipos, sin gastar créditos, no empieza si no da tiempo), incluida en `npm test`. Visto en local: ranking nuevo y Guardar del panel (la dosis pasa de 15 a 20 solo al guardar). El salto automático del VS no se ha visto en directo con dos móviles.
+
+## 14/11/2026 · «Me quedan 35 min para pedir» con la espera a 0
+
+- **Lo que pasaba:** Sergio puso a 0 la espera tras sonar la tuya, y se aplicó bien. Lo que frenaba era el **tope de 3 canciones por hora** («Canciones por persona y hora»): comprobado en Fly, Pepin llevaba 3 en la última hora, libre en 36 min. La pantalla no decía el motivo.
+- **Arreglo:** el servidor manda el motivo de la espera (`waitReason`: `hour` o `cooldown`). Bajo el contador del botón de pedir sale «Máx. 3 por hora» o «Tras sonar la tuya», y al tocarlo se explica.
+- Para quitar el límite: Ajustes → «Canciones por persona y hora» (de 1 a 10) → Guardar.

@@ -875,8 +875,10 @@ export class Engine {
   meState(u: User): MeState {
     const now = Date.now()
     const recent = u.requestTimes.filter((t) => now - t < HOUR)
-    let next = u.lastPlayedAt ? u.lastPlayedAt + this.settings.cooldownMs : 0
-    if (recent.length >= this.settings.maxPerHour) next = Math.max(next, recent[0]! + HOUR)
+    const cooldownEnd = u.lastPlayedAt ? u.lastPlayedAt + this.settings.cooldownMs : 0
+    const hourEnd = recent.length >= this.settings.maxPerHour ? recent[0]! + HOUR : 0
+    const next = Math.max(cooldownEnd, hourEnd)
+    const waitReason = next <= now ? null : hourEnd >= cooldownEnd ? 'hour' : 'cooldown'
     return {
       user: this.pub(u)!,
       activeRequestId: this.activeRequestOf(u)?.id ?? null,
@@ -884,6 +886,8 @@ export class Engine {
       teamId: u.teamId,
       nextRequestAt: next > now ? next : 0,
       requestsLastHour: recent.length,
+      waitReason,
+      maxPerHour: this.settings.maxPerHour,
       energy: this.energyLeft(u),
       maxEnergy: this.settings.energyPerRound,
     }
