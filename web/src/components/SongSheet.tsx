@@ -30,7 +30,7 @@ export function SongSheet({
   const mine = !!r && me?.activeRequestId === r.id
   const myTeam = !!r && me?.teamId === r.id
   const ownOther = !!me?.activeRequestId && me.activeRequestId !== r?.id
-  const voteValue = (inDuel ? 2 : 1) * state.multiplier
+  const voteValue = inDuel ? 2 : 1
   const canVote = !me?.votedThisRound && !frozen && !ownOther
 
   return (

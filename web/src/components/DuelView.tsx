@@ -93,7 +93,7 @@ export function DuelOverlay({
   const myTeam = duel && me?.teamId && (me.teamId === duel.a.id || me.teamId === duel.b.id) ? me.teamId : null
   const ownOutside = !!me?.activeRequestId && duel && me.activeRequestId !== duel.a.id && me.activeRequestId !== duel.b.id
   const urgent = toLock <= 10_000
-  const vote = 2 * state.multiplier
+  const vote = 2
 
   return (
     <AnimatePresence>

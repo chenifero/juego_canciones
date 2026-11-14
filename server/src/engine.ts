@@ -52,7 +52,6 @@ export const DEFAULT_SETTINGS: Settings = {
   waitBonus: 1,
   expireRounds: 8,
   blockExplicit: false,
-  happyHour: false,
   dosePoints: 15,
 }
 
@@ -312,10 +311,6 @@ export class Engine {
     }
   }
 
-  multiplier(): number {
-    return this.settings.happyHour ? 2 : 1
-  }
-
   /** ¿Puede esta canción recibir puntos ahora? (en el duelo solo las dos finalistas) */
   private frozen(r: Req): boolean {
     if (r.status !== 'waiting') return true
@@ -325,7 +320,7 @@ export class Engine {
 
   private addPoints(r: Req, base: number): number {
     const inDuel = this.phase === 'duel' && this.duel && (r.id === this.duel.aId || r.id === this.duel.bId)
-    const pts = Math.round(base * this.multiplier() * (inDuel ? 2 : 1))
+    const pts = Math.round(base * (inDuel ? 2 : 1))
     r.points += pts
     return pts
   }
@@ -795,9 +790,7 @@ export class Engine {
       locked: locked ? this.toPublic(locked) : null,
       duel: this.duel,
       lockAt: this.lockAt(),
-      multiplier: this.multiplier(),
-      happyHour: this.settings.happyHour,
-      dosePoints: this.settings.dosePoints * this.multiplier(),
+      dosePoints: this.settings.dosePoints,
       online,
       serverTime: Date.now(),
     }

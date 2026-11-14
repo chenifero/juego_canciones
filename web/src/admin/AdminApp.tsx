@@ -2,7 +2,6 @@ import {
   ArrowRight,
   Backspace,
   ListNumbers,
-  Martini,
   ImageBroken,
   Minus,
   Pill,
@@ -313,7 +312,7 @@ function Panel({ state, admin, connected, onLogout }: { state: PublicState; admi
   return (
     <div className="mx-auto flex min-h-[100dvh] max-w-lg flex-col px-4 safe-top safe-bottom">
       <header className="pb-3">
-        <Bulbs count={15} size={7} chase={state.phase === 'duel' || s.happyHour} className="px-1" />
+        <Bulbs count={15} size={7} chase={state.phase === 'duel'} className="px-1" />
         <div className="mt-3 flex items-center gap-2.5">
           <img src="/brand/logo-mark.png" alt="" className="h-9 w-auto" />
           <span className="font-display text-[17px] leading-none">Mando de la barra</span>
@@ -376,22 +375,7 @@ function Panel({ state, admin, connected, onLogout }: { state: PublicState; admi
 
       {/* La botonera */}
       <div className="bezel mt-auto rounded-machine p-3">
-        <div className="grid h-[190px] grid-cols-[1fr_1.55fr_1fr] gap-3">
-          <button
-            onClick={() => setSettings({ happyHour: !s.happyHour })}
-            className={cx(
-              'pulsador flex flex-col items-center justify-center gap-2',
-              s.happyHour ? 'bg-amber text-print [--pulsador-glow:rgb(255_194_61/0.55)]' : 'bg-panel-2',
-            )}
-            aria-pressed={s.happyHour}
-          >
-            <Martini size={30} weight={s.happyHour ? 'fill' : 'bold'} aria-hidden />
-            <span className="font-display text-[14px] leading-none">Happy</span>
-            <span className={cx('rounded-full px-2 py-1', s.happyHour ? 'bg-print' : 'bg-ink')}>
-              <Bulbs count={2} lit={s.happyHour ? 2 : 0} size={7} className="w-6" />
-            </span>
-          </button>
-
+        <div className="grid h-[190px] grid-cols-[1.55fr_1fr] gap-3">
           <button
             disabled={!state.open}
             onClick={giveDose}
@@ -403,7 +387,7 @@ function Panel({ state, admin, connected, onLogout }: { state: PublicState; admi
             <Pill size={44} weight="fill" aria-hidden />
             <span className="font-display text-[26px] leading-none">Dosis</span>
             <span className="led-well rounded-[4px] px-2 py-1">
-              <Led value={s.dosePoints * (s.happyHour ? 2 : 1)} digits={2} className="text-[18px]" />
+              <Led value={s.dosePoints} digits={2} className="text-[18px]" />
             </span>
           </button>
 
@@ -457,7 +441,7 @@ function Panel({ state, admin, connected, onLogout }: { state: PublicState; admi
       <RankingDrawer open={drawer === 'ranking'} onClose={() => setDrawer(null)} state={state} admin={admin} act={act} />
       <PeopleDrawer open={drawer === 'gente'} onClose={() => setDrawer(null)} admin={admin} act={act} />
       <SettingsDrawer open={drawer === 'ajustes'} onClose={() => setDrawer(null)} state={state} admin={admin} setSettings={setSettings} act={act} />
-      <DoseModal dose={dose} mult={s.happyHour ? 2 : 1} onClose={() => setDose(null)} />
+      <DoseModal dose={dose} onClose={() => setDose(null)} />
     </div>
   )
 }
@@ -655,11 +639,9 @@ function SettingsDrawer({
 /** QR de un solo uso para la consumición. Se cierra solo al canjearse. */
 function DoseModal({
   dose,
-  mult,
   onClose,
 }: {
   dose: { code: string; points: number; expiresAt: number } | null
-  mult: number
   onClose: () => void
 }) {
   const [img, setImg] = useState<string | null>(null)
@@ -718,7 +700,7 @@ function DoseModal({
               <Pill size={30} weight="fill" className="text-cyan" aria-hidden />
               <p className="flex-1 font-display text-[22px] leading-none">Dosis</p>
               <span className="led-well rounded-[4px] px-2 py-1">
-                <Led value={dose.points * mult} digits={2} className="text-[20px]" />
+                <Led value={dose.points} digits={2} className="text-[20px]" />
               </span>
               <span className="font-display text-[13px] text-amber">pts</span>
             </div>

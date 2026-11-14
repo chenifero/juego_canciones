@@ -506,3 +506,11 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - **Cupo de Spotify (pendiente de validar):** `Retry-After` con tope de 30 s, frenos separados para reproducción y búsqueda, y búsquedas limitadas por IP y en total (también al pedir una canción no cacheada).
 - Pruebas: la prueba de humo pasa de 79 a más comprobaciones (freno de PIN, cierre de sesión, tokens fuera del disco, código de Spotify, tiempo mínimo de Reflejos, tope de puntos, plazo de quiz, altas masivas) y se repitieron las de Playwright del panel, el duelo y el ranking.
 - **Pendiente:** presencia en el bar, `USER node` en el Dockerfile (hay que ajustar los permisos del volumen `/data`), cabeceras de seguridad, y poner `ADMIN_PIN` como secreto en Fly.
+
+## 14/11/2026 · Sin happy hour, aviso de consumición y alarma más suave
+
+- **Alarma de cierre:** el velo rojo ya no cubre el centro; solo late el borde (sombra interior ~55 % en vez de 95 %, y centro transparente). Falta verla en un móvil.
+- **Happy hour eliminada** (decisión de Sergio): fuera del servidor (`happyHour`, `multiplier()`), de los tipos compartidos, del panel de la dueña (el botón «Happy» desaparece, quedan Dosis y Saltar) y de las pantallas del cliente (los votos y juegos ya no se multiplican; solo el duelo sigue valiendo ×2).
+- **Aviso de consumición** en la pantalla del cliente, bajo el rótulo: «Consume en el local y llévate +15 puntos para tu canción. Pídelos en la barra.» Los puntos salen de `dosePoints` (ajustable en el panel). La mecánica ya existía: la dueña genera la dosis (QR de un solo uso, 90 s) y el cliente elige a qué canción darla.
+- **Fly.io:** en el Chrome de Sergio hay cuenta en prueba de 7 días, sin ninguna app creada todavía. Aún no se ha desplegado nada.
+- Tipos y `npm test` en verde.

@@ -74,8 +74,6 @@ export interface PublicState {
   duel: DuelInfo | null
   /** Momento (reloj del servidor) en que se cierran las votaciones. */
   lockAt: number | null
-  multiplier: number
-  happyHour: boolean
   dosePoints: number
   online: number
   serverTime: number
@@ -107,7 +105,6 @@ export interface Settings {
   waitBonus: number
   expireRounds: number
   blockExplicit: boolean
-  happyHour: boolean
   dosePoints: number
 }
 

@@ -1,4 +1,4 @@
-import { Lightning, MusicNotesPlus, WifiSlash } from '@phosphor-icons/react'
+import { Lightning, MusicNotesPlus, Pill, WifiSlash } from '@phosphor-icons/react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { GameId, GameSession, MeState, PublicState, SongRequest } from '../../../shared/types.ts'
@@ -127,6 +127,13 @@ export function Home({
       <NowPlaying state={state} duelShownElsewhere={!!duel} />
 
       <Nudge state={state} me={me} urgent={urgent} onPlay={() => setPickerOpen(true)} onSearch={() => setSearchOpen(true)} />
+
+      <p className="glass mt-3 flex items-center gap-3 rounded-machine px-3 py-2.5" data-testid="consume-aviso">
+        <Pill size={26} weight="fill" className="shrink-0" aria-hidden />
+        <span className="text-[15px] font-bold leading-tight">
+          Consume en el local y llévate <span className="font-display text-[16px]">+{state.dosePoints} puntos</span> para tu canción. Pídelos en la barra.
+        </span>
+      </p>
 
       <h2 className="mb-3 mt-6 font-display text-[18px] leading-none">Ranking</h2>
       <Ranking state={state} me={me} onSelect={setSelected} />

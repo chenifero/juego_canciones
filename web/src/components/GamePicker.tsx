@@ -35,7 +35,7 @@ export function GamePicker({
 }) {
   const team = me?.teamId ? state.ranking.find((r) => r.id === me.teamId) : null
   const duelX = state.phase === 'duel' && team && state.duel && (state.duel.aId === team.id || state.duel.bId === team.id)
-  const mult = state.multiplier * (duelX ? 2 : 1)
+  const mult = duelX ? 2 : 1
   const empty = (me?.energy ?? 0) <= 0
 
   return (
