@@ -541,3 +541,8 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - **Arreglo:** el aviso de consumición es ahora un botón con «Escanear». Abre un lector dentro de la web (`web/src/components/ScanSheet.tsx`): cámara trasera, `BarcodeDetector` nativo si existe (Chrome en Android) y si no `jsqr` (Safari en iPhone), que se carga solo al abrir el lector. Lee la URL `/?dosis=…` o el código suelto y abre la hoja de la dosis.
 - Si no hay permiso de cámara, se puede escribir el código que sale bajo el QR en el panel de la dueña.
 - Comprobado: jsQR lee un QR de dosis generado igual que el del panel; tipos y build en verde; entrada con código y botón vistos en el navegador. La cámara solo funciona con HTTPS (Fly o `localhost`), no por `http://192.168…`.
+
+## 14/11/2026 · Despliegue automático en Fly con cada push
+
+- Workflow `.github/workflows/fly-deploy.yml`: en cada push a `main` pasa tipos y `npm test` y, si pasan, hace `flyctl deploy --remote-only`. También se puede lanzar a mano (`workflow_dispatch`).
+- Necesita el secreto `FLY_API_TOKEN` en GitHub, con un token de despliegue que solo sirva para la app `barmagames` (`fly tokens create deploy`). Lo crea Sergio.

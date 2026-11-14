@@ -1,0 +1,33 @@
+# Cada push a main: comprueba tipos y pruebas de humo y, si pasan, despliega en Fly.
+name: Desplegar en Fly
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency: fly-deploy
+
+jobs:
+  test:
+    name: Tipos y pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  deploy:
+    name: Desplegar
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@1.5
+      - run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
