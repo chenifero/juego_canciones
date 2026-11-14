@@ -43,16 +43,17 @@ export function Closed() {
 
 export function Join({ banned }: { banned: boolean }) {
   const [alias, setAlias] = useState('')
+  const [code, setCode] = useState('')
   const [photo, setPhoto] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
-  const valid = alias.trim().length >= 2
+  const valid = alias.trim().length >= 2 && code.length === 4
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     if (!valid || sending) return
     setSending(true)
     try {
-      const r = await emit<{ token: string }>('join', { alias: alias.trim() })
+      const r = await emit<{ token: string }>('join', { alias: alias.trim(), code })
       session.setToken(r.token)
       vibrate([20, 30, 40])
       // El selfie es opcional: si no sube, entra igual, solo con su nombre
@@ -126,6 +127,20 @@ export function Join({ banned }: { banned: boolean }) {
             autoComplete="nickname"
             maxLength={16}
             className="mt-2 h-14 w-full rounded-machine bg-paper px-4 text-[18px] font-bold text-print outline-none placeholder:text-print/45 focus:ring-4 focus:ring-cyan/60"
+          />
+          <label className="mt-4 block text-[15px] font-bold text-paper/80" htmlFor="code">
+            Código de hoy (pídelo en la barra)
+          </label>
+          <input
+            id="code"
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            placeholder="0000"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            autoComplete="one-time-code"
+            maxLength={4}
+            className="mt-2 h-14 w-full rounded-machine bg-paper px-4 text-center font-led text-[28px] tracking-[0.3em] text-print outline-none placeholder:text-print/30 focus:ring-4 focus:ring-cyan/60"
           />
           <p className="mt-2.5 text-[13px] text-mute">La foto sale en el VS y se borra al cerrar. Si no quieres, entra solo con tu nombre.</p>
           <button

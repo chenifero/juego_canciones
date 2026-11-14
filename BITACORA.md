@@ -514,3 +514,13 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - **Aviso de consumición** en la pantalla del cliente, bajo el rótulo: «Consume en el local y llévate +15 puntos para tu canción. Pídelos en la barra.» Los puntos salen de `dosePoints` (ajustable en el panel). La mecánica ya existía: la dueña genera la dosis (QR de un solo uso, 90 s) y el cliente elige a qué canción darla.
 - **Fly.io:** en el Chrome de Sergio hay cuenta en prueba de 7 días, sin ninguna app creada todavía. Aún no se ha desplegado nada.
 - Tipos y `npm test` en verde.
+
+## 14/11/2026 · Código de la noche para entrar
+
+- **Decisión de Sergio:** en vez de ubicación (se falsea y falla dentro del bar), quien entra por primera vez necesita un **código de 4 cifras** que cambia cada noche.
+- **Servidor:** el código se genera al abrir la noche (`openNight`), se guarda en el estado y lo comprueba `engine.join` (comparación en tiempo constante). Quien ya entró con ese móvil vuelve sin código. Freno de intentos por IP (`codeGuard`: 8 fallos libres, luego espera creciente; un acierto lo reinicia, porque el wifi del bar comparte IP). Evento `admin:newCode` para cambiarlo.
+- **Panel de la dueña:** tira «Código de hoy» con el número en LED y botón «Cambiar» (los que ya están dentro siguen dentro).
+- **Cliente:** la pantalla de entrada pide el código (4 cifras, teclado numérico).
+- **Cartel:** el paso 2 ahora dice «Pide el código de hoy en la barra».
+- Pruebas de humo ampliadas (sin código, código malo, cambio de código, vuelta sin código). Tipos y `npm test` en verde; comprobado a ojo en el navegador.
+- **Pendiente:** que la dueña lo diga o lo escriba en una pizarra; reimprimir el cartel.

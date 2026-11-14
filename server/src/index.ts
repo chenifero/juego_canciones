@@ -38,6 +38,8 @@ let lastMusicError: { message: string; at: number } | null = null
 const loginGuard = new LoginGuard()
 /** Altas de jugadores nuevos por IP (el bar entero comparte la wifi, de ahí el margen). */
 const joinLimit = new WindowCounter(60, 10 * 60_000)
+/** Freno de códigos de la noche equivocados, por IP. Generoso: el wifi del bar comparte IP y un acierto lo reinicia. */
+const codeGuard = new LoginGuard(8, 1_000_000)
 /** Búsquedas y consultas a Spotify: por IP y en total, para no gastar el cupo de la cuenta de la dueña. */
 const searchPerIp = new WindowCounter(30, 10_000)
 const searchGlobal = new WindowCounter(80, 10_000)
@@ -273,7 +275,16 @@ io.on('connection', (socket) => {
   // ── clientes ──
   on(socket, 'join', (p) => {
     if (!joinLimit.take(ip)) throw new GameError('Demasiada gente entrando a la vez. Prueba en unos minutos', 'RATE')
-    const res = engine.join(p.alias, deviceId)
+    const wait = codeGuard.wait(ip)
+    if (wait > 0) throw new GameError(`Demasiados códigos fallidos. Espera ${wait} s`, 'RATE_LIMIT')
+    let res: ReturnType<typeof engine.join>
+    try {
+      res = engine.join(p.alias, deviceId, p.code)
+    } catch (err) {
+      if (err instanceof GameError && err.code === 'BAD_CODE') codeGuard.fail(ip)
+      throw err
+    }
+    codeGuard.ok(ip)
     bindUser(res.token)
     broadcast()
     return res
@@ -363,6 +374,10 @@ io.on('connection', (socket) => {
     void socket.join('admin')
     broadcast()
     return true
+  })
+  on(socket, 'admin:newCode', (p) => {
+    admin(p)
+    return { code: engine.newCode() }
   })
   on(socket, 'admin:night', (p) => {
     admin(p)

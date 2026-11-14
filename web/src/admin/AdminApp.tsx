@@ -322,6 +322,30 @@ function Panel({ state, admin, connected, onLogout }: { state: PublicState; admi
         </div>
       </header>
 
+      {/* Código de la noche: lo dice la dueña a quien llega */}
+      {state.open && (
+        <section className="glass mb-3 flex items-center gap-3 rounded-machine p-2.5" aria-label="Código de la noche">
+          <span className="flex-1 font-display text-[15px] leading-tight">Código de hoy: díselo a quien llegue</span>
+          <span className="led-well rounded-[4px] px-2.5 py-1.5">
+            <Led value={admin.nightCode} digits={4} className="text-[28px]" />
+          </span>
+          <button
+            onClick={async () => {
+              try {
+                await adminEmit('admin:newCode')
+                vibrate(20)
+                toast('Código nuevo. Los que ya han entrado siguen dentro', 'ok')
+              } catch (e) {
+                toast((e as Error).message, 'error')
+              }
+            }}
+            className="rounded-[4px] bg-print px-3 py-2 text-[13px] font-bold text-paper"
+          >
+            Cambiar
+          </button>
+        </section>
+      )}
+
       {/* Tira SUENA */}
       <section className="bezel rounded-machine p-[3px]" aria-label="Estado de la música">
         <div className={cx('flex items-center gap-3 rounded-[4px] p-2.5', state.open && track ? 'glass' : 'glass-dim')}>

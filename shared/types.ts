@@ -118,6 +118,7 @@ export interface AdminState {
   settings: Settings
   users: AdminUserRow[]
   bannedCount: number
+  nightCode: string
   history: { track: TrackInfo; by: PublicUser | null; playedAt: number }[]
   spotifyAccount: string | null
 }

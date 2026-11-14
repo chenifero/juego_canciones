@@ -9,8 +9,8 @@ import { useEffect, useState } from 'react'
 
 const STEPS = [
   { n: '1', text: 'Escanea el QR' },
-  { n: '2', text: 'Pide tu canción' },
-  { n: '3', text: 'Juega y hazla sonar' },
+  { n: '2', text: 'Pide el código de hoy en la barra' },
+  { n: '3', text: 'Pide tu canción y juega' },
 ]
 
 function BulbRow({ count }: { count: number }) {

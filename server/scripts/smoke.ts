@@ -87,16 +87,35 @@ async function main() {
   check(!bad.ok, 'PIN incorrecto rechazado')
   const { token: adminToken } = await ok<{ token: string }>(boss.emit('admin:login', { pin: '9999' }), 'La dueña entra con su PIN')
 
+  const nightCode = async (): Promise<string> => {
+    const next = new Promise<{ nightCode: string }>((r) => boss.socket.once('admin:state', r))
+    await boss.emit('admin:hello', { adminToken })
+    return (await next).nightCode
+  }
+  let code = await nightCode()
+  check(/^\d{4}$/.test(code), 'La noche tiene un código de 4 cifras')
+  const noCode = await client({ deviceId: 'sin-codigo' }).emit('join', { alias: 'Colado' })
+  check(!noCode.ok && noCode.code === 'BAD_CODE', 'Sin código no se entra')
+  const wrongCode = await client({ deviceId: 'mal-codigo' }).emit('join', { alias: 'Colado', code: code === '1234' ? '4321' : '1234' })
+  check(!wrongCode.ok && wrongCode.code === 'BAD_CODE', 'Con un código equivocado no se entra')
+
   const ana = client({ deviceId: 'dev-ana' })
   const bea = client({ deviceId: 'dev-bea' })
   const carlos = client({ deviceId: 'dev-carlos' })
   await sleep(300)
 
-  await ok(ana.emit('join', { alias: 'Ana' }), 'Ana entra')
-  await ok(bea.emit('join', { alias: 'Bea' }), 'Bea entra')
-  await ok(carlos.emit('join', { alias: 'Carlos' }), 'Carlos entra')
-  const dupAlias = await client({ deviceId: 'otro' }).emit('join', { alias: 'ana' })
+  await ok(ana.emit('join', { code, alias: 'Ana' }), 'Ana entra')
+  await ok(bea.emit('join', { code, alias: 'Bea' }), 'Bea entra')
+  await ok(carlos.emit('join', { code, alias: 'Carlos' }), 'Carlos entra')
+  const dupAlias = await client({ deviceId: 'otro' }).emit('join', { code, alias: 'ana' })
   check(!dupAlias.ok, 'Alias repetido rechazado')
+  const oldCode = code
+  const fresh = await ok<{ code: string }>(boss.emit('admin:newCode', { adminToken }), 'La dueña cambia el código')
+  code = fresh.code
+  check(code !== oldCode && /^\d{4}$/.test(code), 'El código nuevo es distinto')
+  const staleCode = await client({ deviceId: 'rezagado' }).emit('join', { code: oldCode, alias: 'Rezagado' })
+  check(!staleCode.ok && staleCode.code === 'BAD_CODE', 'El código viejo ya no vale')
+  await ok(client({ deviceId: 'dev-ana' }).emit('join', { alias: 'Ana' }), 'Quien ya estaba dentro vuelve sin código')
 
   const r1 = await ok<TrackInfo[]>(ana.emit('search', { q: 'hombres' }), 'Ana busca "hombres"')
   check(r1.length > 0 && r1[0]!.artist === 'Hombres G', `Encuentra: ${r1[0]?.title}`)
@@ -223,19 +242,20 @@ async function main() {
   carlos.socket.on('session:expired', () => (kicked = true))
   await ok(boss.emit('admin:ban', { adminToken, userId: carlosId }), 'La dueña bloquea a Carlos')
   check(await waitFor(() => kicked, 3000), 'A Carlos le cierra la sesión')
-  const back = await carlos.emit('join', { alias: 'Carlitos' })
+  const back = await carlos.emit('join', { code, alias: 'Carlitos' })
   check(!back.ok, 'Carlos no puede volver a entrar con otro alias')
 
   await ok(boss.emit('admin:night', { adminToken, open: false }), 'La dueña cierra la noche')
   check(await waitFor(() => ana.state?.open === false && ana.state.ranking.length === 0), 'Todo borrado y bar cerrado')
-  const late = await client({ deviceId: 'x' }).emit('join', { alias: 'Tarde' })
+  const late = await client({ deviceId: 'x' }).emit('join', { code, alias: 'Tarde' })
   check(!late.ok, 'Con el bar cerrado no se puede entrar')
   check(await waitFor(() => ana.expired && bea.expired && carlos.me === null), 'Al cerrar, cada móvil pierde su usuario')
   check(!(await fetch(`${URL}/api/fotos/${beaId}.jpg`)).ok, 'Al cerrar, los selfies se borran')
   await ok(boss.emit('admin:night', { adminToken, open: true }), 'La dueña reabre la noche enseguida')
+  code = await nightCode()
   const stale = await ana.emit('search', { q: 'hombres' })
   check(!stale.ok && stale.code === 'NO_SESSION', 'Ana tiene que volver a poner alias para jugar')
-  await ok(ana.emit('join', { alias: 'Ana' }), 'Ana entra de nuevo con alias (el de anoche está libre)')
+  await ok(ana.emit('join', { code, alias: 'Ana' }), 'Ana entra de nuevo con alias (el de anoche está libre)')
 
   // ── Seguridad: freno de PIN, sesiones de la dueña, límites de uso ──
   const thief = client()
@@ -278,7 +298,7 @@ async function main() {
 
   // Quizzes: una respuesta fuera de plazo no puntúa aunque el índice fuera el bueno
   const dora = client({ deviceId: 'dev-dora' })
-  await ok(dora.emit('join', { alias: 'Dora' }), 'Dora entra')
+  await ok(dora.emit('join', { code, alias: 'Dora' }), 'Dora entra')
   const tusa = await ok<TrackInfo[]>(dora.emit('search', { q: 'tusa' }), 'Dora busca')
   await ok(dora.emit('request', { trackId: tusa[0]!.id }), 'Dora pide canción')
   const cv = await ok<GameSession>(dora.emit('game:start', { game: 'cover' }), 'Dora empieza Carátula')
@@ -291,7 +311,7 @@ async function main() {
   let limited = 0
   for (let i = 0; i < 70; i++) {
     const c = client({ deviceId: `flood-${i}` })
-    const r = await c.emit('join', { alias: `Flood${i}` })
+    const r = await c.emit('join', { code, alias: `Flood${i}` })
     if (r.ok) joined++
     else if (r.code === 'RATE') limited++
     c.socket.close()

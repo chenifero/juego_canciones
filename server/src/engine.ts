@@ -120,6 +120,8 @@ export interface EngineSnapshot {
   adminTokens: [string, number][]
   /** Hash del PIN con que se crearon: si cambia el PIN, esas sesiones dejan de valer. */
   adminPinHash?: string
+  /** Código de la noche (4 cifras): quien entra por primera vez lo necesita. */
+  nightCode?: string
   round: number
 }
 
@@ -149,6 +151,7 @@ export class Engine {
   /** hash del token → caducidad */
   private adminTokens = new Map<string, number>()
   private adminPinHash = ''
+  private nightCode = ''
   /** Códigos de un solo uso para ir a Spotify sin poner el token en la URL. */
   private linkCodes = new Map<string, number>()
 
@@ -184,6 +187,7 @@ export class Engine {
       bannedDevices: [...this.bannedDevices],
       adminTokens: [...this.adminTokens],
       adminPinHash: this.adminPinHash,
+      nightCode: this.nightCode,
       round: this.round,
     }
   }
@@ -191,6 +195,7 @@ export class Engine {
   restore(s: EngineSnapshot): void {
     this.settings = { ...DEFAULT_SETTINGS, ...s.settings }
     this.open = s.open
+    this.nightCode = /^\d{4}$/.test(s.nightCode ?? '') ? s.nightCode! : this.makeCode()
     this.users = new Map(s.users.map((u) => [u.id, u]))
     this.tokens = new Map(s.users.map((u) => [u.token, u.id]))
     this.requests = new Map(s.requests.map((r) => [r.id, r]))
@@ -243,10 +248,30 @@ export class Engine {
     return this.bannedDevices.has(deviceId)
   }
 
-  join(aliasRaw: unknown, deviceIdRaw: unknown): { token: string; user: PublicUser } {
+  private makeCode(): string {
+    return String(randomInt(1000, 10000))
+  }
+
+  get code(): string {
+    return this.nightCode
+  }
+
+  /** La dueña cambia el código; quien ya está dentro no se entera ni se ve afectado. */
+  newCode(): string {
+    this.nightCode = this.makeCode()
+    this.onChange()
+    return this.nightCode
+  }
+
+  join(aliasRaw: unknown, deviceIdRaw: unknown, codeRaw?: unknown): { token: string; user: PublicUser } {
     if (!this.open) throw new GameError('La Barmacia está cerrada ahora mismo', 'CLOSED')
     const deviceId = typeof deviceIdRaw === 'string' ? deviceIdRaw.slice(0, 64) : ''
     if (deviceId && this.bannedDevices.has(deviceId)) throw new GameError('No puedes jugar esta noche', 'BANNED')
+    // Quien ya entró esta noche con este móvil vuelve sin código; los demás lo necesitan
+    const known = !!deviceId && [...this.users.values()].some((u) => u.deviceId === deviceId)
+    if (!known && !safeEqual(String(codeRaw ?? '').trim(), this.nightCode)) {
+      throw new GameError('Ese código no es. Pídelo en la barra', 'BAD_CODE')
+    }
     const alias = String(aliasRaw ?? '')
       .replace(/[\p{Cc}\p{Cf}]/gu, '')
       .replace(/\s+/g, ' ')
@@ -887,6 +912,7 @@ export class Engine {
         }))
         .sort((a, b) => Number(b.online) - Number(a.online) || b.joinedAt - a.joinedAt),
       bannedCount: this.bannedDevices.size,
+      nightCode: this.nightCode,
       history: this.history.slice(0, 30),
       spotifyAccount: account,
     }
@@ -894,6 +920,7 @@ export class Engine {
 
   openNight(): void {
     this.open = true
+    this.nightCode = this.makeCode()
     this.lastTrackId = null
     this.phase = 'idle'
     this.onChange()
