@@ -546,3 +546,9 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 
 - Workflow `.github/workflows/fly-deploy.yml`: en cada push a `main` pasa tipos y `npm test` y, si pasan, hace `flyctl deploy --remote-only`. También se puede lanzar a mano (`workflow_dispatch`).
 - Necesita el secreto `FLY_API_TOKEN` en GitHub, con un token de despliegue que solo sirva para la app `barmagames` (`fly tokens create deploy`). Lo crea Sergio.
+
+## 14/11/2026 · El servidor ya no corre como root
+
+- El contenedor arranca con `docker-entrypoint.sh`: da la carpeta `/data` (volumen que Fly monta como root) al usuario `node` y arranca Node como `node` con `su-exec`. Así el proceso del servidor nunca tiene permisos de root.
+- Comprobado en Fly (`fly ssh console`): `node server/src/index.ts` corre como `node`, `/data` es de `node`, el estado y la conexión de Spotify se conservan y la web responde 200.
+- Con esto se cierra lo pendiente de la auditoría salvo las cabeceras de seguridad.
