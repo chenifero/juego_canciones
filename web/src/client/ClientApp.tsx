@@ -30,5 +30,5 @@ export function ClientApp() {
     if (session.token && !expired) return <Splash text="Entrando…" />
     return <Join banned={!!expired?.banned} />
   }
-  return <Home state={state} me={me} connected={connected} doseCode={doseCode} clearDose={() => setDoseCode(null)} />
+  return <Home state={state} me={me} connected={connected} doseCode={doseCode} setDose={setDoseCode} clearDose={() => setDoseCode(null)} />
 }

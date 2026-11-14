@@ -1,9 +1,10 @@
-import { Lightning, MusicNotesPlus, Pill, WifiSlash } from '@phosphor-icons/react'
+import { Lightning, MusicNotesPlus, Pill, QrCode, WifiSlash } from '@phosphor-icons/react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { GameId, GameSession, MeState, PublicState, SongRequest } from '../../../shared/types.ts'
 import { Avatar, FaceSheet } from '../components/Avatar.tsx'
 import { DoseSheet } from '../components/DoseSheet.tsx'
+import { ScanSheet } from '../components/ScanSheet.tsx'
 import { DuelBar, DuelOverlay, getDuel } from '../components/DuelView.tsx'
 import { GamePicker } from '../components/GamePicker.tsx'
 import { Bulbs, Led } from '../components/machine.tsx'
@@ -25,14 +26,24 @@ export function Home({
   me,
   connected,
   doseCode,
+  setDose,
   clearDose,
 }: {
   state: PublicState
   me: MeState
   connected: boolean
   doseCode: string | null
+  setDose: (code: string) => void
   clearDose: () => void
 }) {
+  const [scanOpen, setScanOpen] = useState(false)
+  const onScanned = useCallback(
+    (code: string) => {
+      setScanOpen(false)
+      setDose(code)
+    },
+    [setDose],
+  )
   const [searchOpen, setSearchOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [selected, setSelected] = useState<SongRequest | null>(null)
@@ -128,12 +139,20 @@ export function Home({
 
       <Nudge state={state} me={me} urgent={urgent} onPlay={() => setPickerOpen(true)} onSearch={() => setSearchOpen(true)} />
 
-      <p className="glass mt-3 flex items-center gap-3 rounded-machine px-3 py-2.5" data-testid="consume-aviso">
+      <button
+        onClick={() => setScanOpen(true)}
+        className="pulsador glass mt-3 flex w-full items-center gap-3 px-3 py-2.5 text-left [--pulsador-glow:rgb(25_195_255/0.45)]"
+        data-testid="consume-aviso"
+      >
         <Pill size={26} weight="fill" className="shrink-0" aria-hidden />
-        <span className="text-[15px] font-bold leading-tight">
-          Consume en el local y llévate <span className="font-display text-[16px]">+{state.dosePoints} puntos</span> para tu canción. Pídelos en la barra.
+        <span className="flex-1 text-[15px] font-bold leading-tight">
+          Consume en el local y llévate <span className="font-display text-[16px]">+{state.dosePoints} puntos</span> para tu canción.
         </span>
-      </p>
+        <span className="flex shrink-0 flex-col items-center gap-1 rounded-[4px] bg-print px-2 py-1.5 text-paper">
+          <QrCode size={22} weight="bold" aria-hidden />
+          <span className="font-display text-[11px] leading-none">Escanear</span>
+        </span>
+      </button>
 
       <h2 className="mb-3 mt-6 font-display text-[18px] leading-none">Ranking</h2>
       <Ranking state={state} me={me} onSelect={setSelected} />
@@ -159,6 +178,7 @@ export function Home({
       />
       <FaceSheet open={faceOpen} onClose={() => setFaceOpen(false)} user={me.user} />
       <GamePicker open={pickerOpen} onClose={() => setPickerOpen(false)} state={state} me={me} onStart={play} />
+      <ScanSheet open={scanOpen} onClose={() => setScanOpen(false)} onCode={onScanned} />
       <DoseSheet code={doseCode} state={state} me={me} onClose={clearDose} />
       <DuelOverlay
         state={state}

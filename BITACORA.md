@@ -534,3 +534,10 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - **Efecto no pedido de `fly launch`:** creó el secreto `FLY_API_TOKEN` en el repo de GitHub `chenifero/juego_canciones` y un workflow de despliegue automático; el workflow se borró en local, el secreto sigue en GitHub (pendiente de decidir si quitarlo).
 - **Pendiente:** añadir `https://barmagames.fly.dev/callback` como Redirect URI en la app de Spotify y conectar Spotify desde `/admin`; probar entrada, código y alarma desde el móvil; `USER node` en el Dockerfile (permisos de `/data`); reimprimir el cartel con el QR de la dirección de producción.
 - (14/11, después) Secreto `FLY_API_TOKEN` borrado del repo de GitHub. Sergio añadió el Redirect URI de Spotify. Se mantiene la **prueba gratuita de 7 días de Fly** (sin tarjeta por ahora; hay que decidir antes de que termine, hacia el 21/11).
+
+## 14/11/2026 · Lector de QR dentro de la web
+
+- **Problema:** al escanear la dosis con la cámara del móvil se abre el navegador por defecto, que puede no ser en el que se juega (sin sesión y con el alias «pillado»).
+- **Arreglo:** el aviso de consumición es ahora un botón con «Escanear». Abre un lector dentro de la web (`web/src/components/ScanSheet.tsx`): cámara trasera, `BarcodeDetector` nativo si existe (Chrome en Android) y si no `jsqr` (Safari en iPhone), que se carga solo al abrir el lector. Lee la URL `/?dosis=…` o el código suelto y abre la hoja de la dosis.
+- Si no hay permiso de cámara, se puede escribir el código que sale bajo el QR en el panel de la dueña.
+- Comprobado: jsQR lee un QR de dosis generado igual que el del panel; tipos y build en verde; entrada con código y botón vistos en el navegador. La cámara solo funciona con HTTPS (Fly o `localhost`), no por `http://192.168…`.
