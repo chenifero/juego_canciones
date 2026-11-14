@@ -524,3 +524,12 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - **Cartel:** el paso 2 ahora dice «Pide el código de hoy en la barra».
 - Pruebas de humo ampliadas (sin código, código malo, cambio de código, vuelta sin código). Tipos y `npm test` en verde; comprobado a ojo en el navegador.
 - **Pendiente:** que la dueña lo diga o lo escriba en una pizarra; reimprimir el cartel.
+
+## 14/11/2026 · Desplegado en Fly.io
+
+- **App en marcha:** https://barmagames.fly.dev (200 OK, 1 máquina `shared-cpu-1x` 256 MB siempre encendida, noche cerrada).
+- **Región:** Madrid ya no existe en Fly; se usa **París (`cdg`)**. Volumen `barma_data` de 1 GB en `/data`.
+- **Secretos puestos** (importados sin mostrarlos): `ADMIN_PIN` (elegido por Sergio, no se guarda aquí) y las claves de Spotify del `.env`.
+- **flyctl** instalado en `C:\Users\sergi\.fly\bin\flyctl.exe` (no está en el PATH de Git Bash; usar PowerShell).
+- **Efecto no pedido de `fly launch`:** creó el secreto `FLY_API_TOKEN` en el repo de GitHub `chenifero/juego_canciones` y un workflow de despliegue automático; el workflow se borró en local, el secreto sigue en GitHub (pendiente de decidir si quitarlo).
+- **Pendiente:** añadir `https://barmagames.fly.dev/callback` como Redirect URI en la app de Spotify y conectar Spotify desde `/admin`; probar entrada, código y alarma desde el móvil; `USER node` en el Dockerfile (permisos de `/data`); reimprimir el cartel con el QR de la dirección de producción.
