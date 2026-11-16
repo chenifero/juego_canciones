@@ -54,12 +54,18 @@ const norm = (s: string) =>
     .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9]/g, '')
 
-/** El mejor candidato: mismo álbum (sin ediciones raras) y mismo artista, con portada. */
+/**
+ * El mejor candidato: mismo álbum y mismo artista, con portada.
+ * El artista tiene que ser exactamente uno de los del álbum: «The Beatles Complete On Ukulele»
+ * o «Eagles Experience» contienen el nombre pero son grupos de versiones con otra portada.
+ * Las ediciones remasterizadas valen (misma portada); las de directo no.
+ */
 export function bestAlbum(name: string, artist: string, found: AlbumInfo[]): AlbumInfo | null {
   const n = norm(name)
   const a = norm(artist)
-  const ok = found.filter((f) => f.cover && norm(f.artist).includes(a))
-  return ok.find((f) => norm(f.name) === n) ?? ok.find((f) => norm(f.name).startsWith(n)) ?? null
+  const ok = found.filter((f) => f.cover && f.artist.split(', ').some((x) => norm(x) === a))
+  const edition = ok.filter((f) => norm(f.name).startsWith(n) && !/\blive\b|\ben directo\b|\ben vivo\b/i.test(f.name))
+  return ok.find((f) => norm(f.name) === n) ?? edition[0] ?? null
 }
 
 let cache: AlbumInfo[] = []

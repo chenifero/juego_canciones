@@ -10,7 +10,7 @@ const STEPS = [5, 7, 10, 14, 20, 28, 40]
 const REVEAL_MS = 1_200
 
 /** Carátula que empieza en cuadros gordos y se va aclarando; al contestar se ve entera. */
-function PixelCover({ src, progress, reveal }: { src: string; progress: number; reveal: boolean }) {
+function PixelCover({ src, progress, reveal, side }: { src: string; progress: number; reveal: boolean; side: number }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const [img, setImg] = useState<HTMLImageElement | null>(null)
 
@@ -42,13 +42,30 @@ function PixelCover({ src, progress, reveal }: { src: string; progress: number; 
     small.getContext('2d')?.drawImage(img, 0, 0, cells, cells)
     ctx.imageSmoothingEnabled = false
     ctx.drawImage(small, 0, 0, cells, cells, 0, 0, size, size)
-  }, [img, cells])
+  }, [img, cells, side])
 
   return (
-    <div className="bezel mx-auto w-[min(76vw,300px)] rounded-machine p-[3px]">
+    <div className="bezel w-full rounded-machine p-[3px]">
       <canvas ref={canvas} className="block aspect-square w-full rounded-[4px] bg-panel" role="img" aria-label="Carátula pixelada" />
     </div>
   )
+}
+
+/** Tamaño del hueco que queda para la carátula, para que las 4 respuestas quepan siempre. */
+function useBox(): [(el: HTMLElement | null) => void, { w: number; h: number }] {
+  const [el, setEl] = useState<HTMLElement | null>(null)
+  const [box, setBox] = useState({ w: 0, h: 0 })
+  useEffect(() => {
+    if (!el) return
+    const ro = new ResizeObserver(([e]) => {
+      const { width, height } = e!.contentRect
+      setBox({ w: Math.floor(width), h: Math.floor(height) })
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [el])
+  // Ref de función: cada ronda crea un hueco nuevo y hay que medir ese
+  return [setEl, box]
 }
 
 type Phase = 'ask' | 'wait' | 'reveal'
@@ -73,6 +90,8 @@ export function QuizGame({ session, onDone }: { session: GameSession; onDone: (s
   doneRef.current = onDone
 
   const q: QuizRound | undefined = rounds[i]
+  const [slot, box] = useBox()
+  const side = Math.max(0, Math.min(300, Math.floor(box.w * 0.8), box.h))
 
   async function answer(choice: number) {
     if (answered.current || !q) return
@@ -149,17 +168,22 @@ export function QuizGame({ session, onDone }: { session: GameSession; onDone: (s
         initial={reduce ? false : { opacity: 0, x: 24 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="flex min-h-0 flex-1 flex-col gap-4"
+        className="flex min-h-0 flex-1 flex-col gap-4 [@media(max-height:640px)]:gap-3"
       >
         {isCover ? (
-          <div className="relative">
-            <PixelCover src={q.cover!} progress={elapsed / q.timeMs} reveal={phase !== 'ask'} />
-            {fast && (
-              <span className="absolute -top-2 right-[calc(50%-min(38vw,150px)-6px)]">
-                <Stamp tone="amber" rotate={6} className="bg-ink">
-                  Vale doble
-                </Stamp>
-              </span>
+          // La carátula ocupa lo que sobra (hasta 300 px) y encoge en móviles bajos
+          <div ref={slot} className="flex min-h-[110px] flex-1 items-center justify-center">
+            {side > 0 && (
+              <div className="relative" style={{ width: side }}>
+                <PixelCover src={q.cover!} progress={elapsed / q.timeMs} reveal={phase !== 'ask'} side={side} />
+                {fast && (
+                  <span className="absolute -top-2 -right-1.5">
+                    <Stamp tone="amber" rotate={6} className="bg-ink">
+                      Vale doble
+                    </Stamp>
+                  </span>
+                )}
+              </div>
             )}
           </div>
         ) : (
@@ -171,7 +195,7 @@ export function QuizGame({ session, onDone }: { session: GameSession; onDone: (s
         )}
         {isCover && <p className="text-center font-display text-[18px] leading-none">{q.prompt}</p>}
 
-        <div className="mt-auto grid gap-2.5">
+        <div className="mt-auto grid gap-2.5 [@media(max-height:640px)]:gap-2">
           {q.options.map((o, k) => {
             const isRight = phase === 'reveal' && correct === k
             const isWrong = phase === 'reveal' && picked === k && correct !== k
@@ -181,7 +205,7 @@ export function QuizGame({ session, onDone }: { session: GameSession; onDone: (s
                 onClick={() => answer(k)}
                 disabled={phase !== 'ask'}
                 className={cx(
-                  'pulsador flex min-h-14 flex-col justify-center px-4 py-2 text-left disabled:!filter-none',
+                  'pulsador flex min-h-14 flex-col [@media(max-height:640px)]:min-h-12 [@media(max-height:640px)]:py-1.5 justify-center px-4 py-2 text-left disabled:!filter-none',
                   // La buena se enciende en ámbar (premio); el rosa queda solo para el fallo
                   isRight ? 'bg-amber text-print [--pulsador-glow:rgb(255_194_61/0.45)]' : isWrong ? 'glass-rival' : picked === k ? 'bg-paper text-print' : 'bg-panel-2',
                   phase === 'reveal' && !isRight && !isWrong && 'opacity-45',

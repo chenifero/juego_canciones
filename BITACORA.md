@@ -593,3 +593,10 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - Prueba de humo ampliada (125 comprobaciones, en verde) y tipos en verde.
 - Visto en un navegador con la web compilada: entrada, panel de la dueña, QR de la dosis, ranking, lector de QR y cartel, sin ningún aviso en la consola.
 - Con esto se cierra la auditoría de seguridad del 13/11.
+
+## 16/11/2026 · Carátulas equivocadas y cuarta respuesta cortada
+
+- **Carátulas (aviso de Sergio):** al buscar cada álbum famoso en Spotify valía cualquier artista cuyo nombre *contuviera* el original. Salían tres portadas falsas: **Abbey Road** y **Sgt. Pepper's** de «The Beatles Complete On Ukulele» y **Hotel California** de «Eagles Experience». Ahora el artista tiene que ser exactamente uno de los del álbum y se descartan las ediciones en directo (`bestAlbum` en `server/src/albums.ts`). Revisadas a ojo las 42 portadas contra Spotify: todas correctas. Nueva comprobación en la prueba de humo.
+- **Juego de la carátula en el móvil:** la carátula medía casi 300 px fijos y la cuarta respuesta quedaba fuera de pantalla (reproducido a 390×664). Ahora la carátula ocupa el hueco que sobra (hasta 300 px, mínimo 110) y, en pantallas de menos de 640 px de alto, los botones y huecos se aprietan un poco. Visto en 390×664, 375×548 (iPhone SE) y 430×860 (la carátula sigue a 294 px).
+- **Comprobado por Sergio:** el lector de QR funciona en su móvil.
+- Tipos y `npm test` en verde (126 comprobaciones).

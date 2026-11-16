@@ -6,6 +6,7 @@
  *   node server/scripts/smoke.ts
  */
 import { spawn } from 'node:child_process'
+import { bestAlbum } from '../src/albums.ts'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -81,6 +82,14 @@ async function main() {
     } catch {}
     await sleep(200)
   }
+
+  // Carátulas: el artista tiene que ser exactamente el del álbum (fuera grupos de versiones y directos)
+  const pick = bestAlbum('Abbey Road', 'The Beatles', [
+    { name: 'Abbey Road', artist: 'The Beatles Complete On Ukulele', cover: 'mal' },
+    { name: 'Abbey Road (Live)', artist: 'The Beatles', cover: 'directo' },
+    { name: 'Abbey Road (Remastered 2009)', artist: 'The Beatles', cover: 'buena' },
+  ])
+  check(pick?.cover === 'buena', 'Carátula: se elige el álbum del artista de verdad, no un homenaje')
 
   // Cabeceras de seguridad (en el simulador no es producción: sin HSTS)
   const h = (await fetch(`${URL}/api/health`)).headers
