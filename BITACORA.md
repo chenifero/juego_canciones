@@ -609,3 +609,10 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - **Revisión independiente (Impeccable):** «fix» con 7 arreglos, todos aplicados: pieza encendida que funciona, foco y lector de pantalla (foco al «Vale», Tab atrapado, se anuncia el paso, el foco vuelve al cerrar), escalera larga (scroll al principio de la sección), móvil girado o bajo (el foco se corta para que quepa el rótulo, que nunca sale de pantalla), pieza que no existe (se salta), vuelta arriba al acabar y texto del paso 1 según el estado.
 - Visto en el navegador a 390×844, 375×667 (vacío y con 15 canciones) y 844×390 (girado). Tipos, `npm test` (126) y build en verde. `DESIGN.md` actualizado (sección «Tour de bienvenida»).
 - **Sin ver todavía:** en un móvil real y la escalera vacía después del último ajuste del foco.
+
+## 16/11/2026 · Tour: cuadros que no ajustaban
+
+- **Aviso de Sergio (con capturas):** el borde iluminado cortaba PIDE y JUGAR por abajo, y «Vale» llevaba un aro ámbar que se confundía con el de la pieza.
+- **Causa:** el tope de altura pensado para la escalera larga se aplicaba a todas las piezas, y los pulsadores de abajo quedaban recortados. El aro de «Vale» era el foco de teclado, porque el tour lo enfocaba al abrirse.
+- **Arreglo:** solo se recorta la escalera, y por peldaños enteros; los pulsadores se iluminan siempre enteros. El foco del teclado va al tour entero, y el cambio de paso lo anuncia una zona viva.
+- Visto a 1100×760 y 390×844 (PIDE, ranking vacío y JUGAR). Tipos y `npm test` en verde.

@@ -283,7 +283,7 @@ Sale una vez por móvil, justo al entrar, y se vuelve a ver con el botón «?» 
 - **Rótulo:** bisel con fondo `#1b1e24` y un pico que apunta a la pieza; va encima de ella si está en la mitad de abajo y debajo si no. Dentro, un icono de 56px (cristal cian o ámbar, el color de la pieza señalada), título en Bungee 19px y una sola frase en Archivo 600 15px al 75 %. Abajo, el progreso en bombillas, «Saltar» en `mute` y el pulsador ámbar «Vale» («¡A jugar!» en el último).
 - **Pasos (4):** PIDE («Pide tu canción»; si ya tienes canción, «Tu canción, en directo»; si estás esperando, «Aquí se pide»), escalera («La 1.ª suena después», con el VS), JUGAR («Juega y súmale puntos») y dosis («Consume: +N»).
 - **La pieza encendida funciona:** tocarla hace lo suyo (abre la búsqueda, los juegos, la ficha o el lector) y da el tour por visto. Tocar fuera del hueco avanza; Escape lo salta; las flechas pasan de paso y el Tab se queda entre «Saltar» y «Vale».
-- El foco nunca pasa del espacio que deja el rótulo (móvil girado o pequeño) y el rótulo nunca se sale de la pantalla. Al acabar, la página vuelve arriba. Si una pieza no está, se salta su paso.
+- Un pulsador se ilumina siempre entero. Solo la escalera se recorta, por peldaños enteros, para dejar sitio al rótulo (móvil girado o pequeño), y el rótulo nunca se sale de la pantalla. Al abrirse, el foco del teclado va al tour entero y no al «Vale», para que su aro no se confunda con la pieza iluminada. Al acabar, la página vuelve arriba. Si una pieza no está, se salta su paso.
 - No sale encima del VS, de un juego, de una dosis ni de un cajón abierto. Con movimiento reducido, el hueco salta sin muelle y el rótulo solo aparece.
 
 ### Minijuegos

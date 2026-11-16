@@ -82,13 +82,15 @@ function useTargetRect(target: string | null, tipH: number, vp: { w: number; h: 
       if (!el?.isConnected) el = find()
       if (!el) return setRect('missing')
       const r = el.getBoundingClientRect()
-      // Lo que cabe del foco: la pantalla menos el rótulo que va debajo (cuenta en móviles bajos o girados)
+      // Solo se recorta una lista (la escalera), y por peldaños enteros: un pulsador se ilumina siempre entero.
+      // Lo que cabe: la pantalla menos el rótulo que va debajo (cuenta en móviles bajos o girados).
+      const rungs = el.querySelectorAll('li')
       const cap = Math.max(MIN_SPOT, Math.min(MAX_SPOT, innerHeight - r.top - PAD * 2 - GAP - tipRef.current - EDGE))
       let height = r.height
-      if (height > cap) {
+      if (rungs.length && height > cap) {
         // Se corta al final de un peldaño entero, nunca a media fila o a media frase
         let bottom = 0
-        for (const li of el.querySelectorAll('li')) {
+        for (const li of rungs) {
           const b = li.getBoundingClientRect().bottom
           if (b <= r.top + cap && b > bottom) bottom = b
         }
@@ -145,10 +147,13 @@ export function Tour({
     returnTo.current = document.activeElement as HTMLElement | null
   }, [open])
 
-  // El foco va al «Vale» en cuanto existe (en el primer pintado aún no hay rótulo)
+  // El foco entra en el tour en cuanto existe (en el primer pintado aún no hay rótulo).
+  // Va al tour entero y no al «Vale»: así el «Vale» no lleva un aro que se confunda con la pieza iluminada.
+  // Con Tab se pasa a «Vale» y «Saltar»; el cambio de paso lo anuncia la zona viva del rótulo.
+  const dialog = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    if (open && rect) nextBtn.current?.focus({ preventScroll: true })
-  }, [open, i, !!rect])
+    if (open && rect) dialog.current?.focus({ preventScroll: true })
+  }, [open, !!rect])
 
   // Alto real del rótulo, para que quepa con el hueco (móvil girado o pequeño)
   useLayoutEffect(() => {
@@ -217,7 +222,9 @@ export function Tour({
     <AnimatePresence>
       {open && step && spot && Glyph && (
         <motion.div
-          className="pointer-events-none fixed inset-0 z-[65]"
+          ref={dialog}
+          tabIndex={-1}
+          className="pointer-events-none fixed inset-0 z-[65] outline-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -276,7 +283,7 @@ export function Tour({
                   >
                     <Glyph size={32} weight="fill" aria-hidden />
                   </span>
-                  <div className="min-w-0">
+                  <div className="min-w-0" aria-live="polite">
                     <p id="tour-title" className="font-display text-[19px] leading-[1.05]">
                       {step.title}
                     </p>
