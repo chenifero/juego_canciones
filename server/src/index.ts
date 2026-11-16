@@ -14,6 +14,7 @@ import { famousAlbums } from './albums.ts'
 import { LoginGuard, WindowCounter, clientIp } from './ratelimit.ts'
 import { MIN_ARTISTS, SEED_QUERIES, distinctArtists, poolEntries } from './quiz.ts'
 import { debounced, readJson, writeJson } from './store.ts'
+import { securityHeaders } from './security.ts'
 
 // ───────────────────────── motor + reproductor ─────────────────────────
 
@@ -52,6 +53,7 @@ const socketsPerIp = new Map<string, number>()
 
 const app = express()
 app.disable('x-powered-by')
+app.use(securityHeaders({ production: process.env.NODE_ENV === 'production' }))
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, mock: config.mock, spotify: music.isConnected(), open: engine.open })

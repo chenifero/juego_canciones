@@ -82,6 +82,15 @@ async function main() {
     await sleep(200)
   }
 
+  // Cabeceras de seguridad (en el simulador no es producción: sin HSTS)
+  const h = (await fetch(`${URL}/api/health`)).headers
+  const csp = h.get('content-security-policy') ?? ''
+  check(csp.includes("script-src 'self'") && csp.includes("frame-ancestors 'none'"), 'La web lleva política de contenido (CSP)')
+  check(csp.includes('https://*.scdn.co'), 'La CSP deja ver las carátulas de Spotify')
+  check(h.get('x-content-type-options') === 'nosniff' && h.get('x-frame-options') === 'DENY', 'Cabeceras nosniff y anti-iframe')
+  check((h.get('permissions-policy') ?? '').includes('camera=(self)'), 'La cámara solo la pide la propia web')
+  check(!h.has('strict-transport-security') && !h.has('x-powered-by'), 'Sin HSTS fuera de producción ni x-powered-by')
+
   const boss = client()
   const bad = await boss.emit('admin:login', { pin: '0000' })
   check(!bad.ok, 'PIN incorrecto rechazado')

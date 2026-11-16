@@ -575,3 +575,21 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - **Lo que pasaba:** Sergio puso a 0 la espera tras sonar la tuya, y se aplicó bien. Lo que frenaba era el **tope de 3 canciones por hora** («Canciones por persona y hora»): comprobado en Fly, Pepin llevaba 3 en la última hora, libre en 36 min. La pantalla no decía el motivo.
 - **Arreglo:** el servidor manda el motivo de la espera (`waitReason`: `hour` o `cooldown`). Bajo el contador del botón de pedir sale «Máx. 3 por hora» o «Tras sonar la tuya», y al tocarlo se explica.
 - Para quitar el límite: Ajustes → «Canciones por persona y hora» (de 1 a 10) → Guardar.
+
+## 16/11/2026 · Token de despliegue en GitHub
+
+- Los 3 despliegues automáticos del 14/11 fallaron con `no access token available`: faltaba el secreto `FLY_API_TOKEN` en GitHub. Producción estaba al día (v6) porque se desplegó a mano.
+- Sergio creó un token de despliegue solo para `barmagames` y lo guardó directamente como secreto en GitHub, sin mostrarlo en pantalla. El secreto aparece en el repo desde el 16/11.
+- Un primer token llegó a salir en pantalla; revocado el 16/11 (`NPmomBKk…`). También revocado el viejo de `fly launch` (`barmagames`). Solo queda activo el token que usa GitHub.
+- Comprobado: despliegue lanzado a mano (run 43857695328) en verde, tipos y pruebas incluidos; la web responde 200.
+
+## 16/11/2026 · Cabeceras de seguridad
+
+- Nuevo `server/src/security.ts`, aplicado a todo lo que sirve el servidor (web, fotos y API):
+  - **CSP:** solo scripts propios (sin `eval` ni scripts en línea), carátulas de Spotify (`*.scdn.co`, `*.spotifycdn.com`), `data:`/`blob:` para QR y selfies, Socket.IO del mismo origen, nada de iframes (`frame-ancestors 'none'`). Estilos en línea permitidos (los usan React y Motion).
+  - `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: same-origin` (el código de la dosis va en la URL), `Cross-Origin-Opener-Policy: same-origin`.
+  - **Permissions-Policy:** cámara solo para la propia web (lector de QR); micro, ubicación, pagos y USB cerrados.
+  - Solo en producción: HSTS de 1 año y `upgrade-insecure-requests` (en casa se prueba por `http://192.168…`).
+- Prueba de humo ampliada (125 comprobaciones, en verde) y tipos en verde.
+- Visto en un navegador con la web compilada: entrada, panel de la dueña, QR de la dosis, ranking, lector de QR y cartel, sin ningún aviso en la consola.
+- Con esto se cierra la auditoría de seguridad del 13/11.
