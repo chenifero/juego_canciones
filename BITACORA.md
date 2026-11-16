@@ -625,3 +625,10 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - **Regla nueva (decisión de Sergio):** con canción propia también se puede jugar por otras. Hay dos bolsas: **3 partidas por ronda para la tuya** (como antes) y **3 para ayudar a canciones ajenas**. Al gastar estas, **10 min de espera** (`helpPlays` y `helpCooldownMs` en los ajustes; no están en el panel). La espera se guarda con el jugador, así que sobrevive a un reinicio. La cuenta atrás sale en LED en JUGAR, en el selector y en la ficha. Quien vuelve a jugar por la suya no cuenta como apoyo de su propia canción.
 - Pruebas de humo nuevas: las partidas para ayudar no se recargan con la canción; al gastarlas empieza la espera de 10 min y se rechaza otra partida; con canción propia se juega por otra sin tocar las de la tuya; volver a la tuya. 139 comprobaciones en verde, tipos y build también.
 - Visto en el navegador a 390×844: elegir canción desde JUGAR, «Jugar por ella» desde la ficha, y la cuenta atrás en el selector y en JUGAR, que se mantiene al recargar.
+
+## 16/11/2026 · Firma de iamsergio.dev
+
+- **Petición de Sergio:** su firma en la consola (F12), como en otros proyectos, y un «hecho por iamsergio.dev» pequeño en la web.
+- **Consola:** se copió la firma de SpiritDex (`web/src/lib/consoleSignature.ts` y `web/public/console-face.png`): la cara, «IAMSERGIO.DEV» en ASCII y «¿fisgoneando el código? 👀 hecho por https://iamsergio.dev». Sale al arrancar cualquier página (juego, panel y cartel). La imagen es del propio dominio, así que la CSP la deja pasar.
+- **Web:** «Hecho por iamsergio.dev» en 12 px gris al final de la portada, bajo el ranking. Enlaza a https://iamsergio.dev/ en una pestaña nueva.
+- Visto a 390×844 en el simulador: el crédito queda por encima de los pulsadores y la consola muestra la firma sin errores de CSP. Tipos y build en verde.

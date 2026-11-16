@@ -211,6 +211,13 @@ export function Home({
       </section>
       </div>
 
+      <p className="mt-10 text-center text-[12px] text-mute">
+        Hecho por{' '}
+        <a href="https://iamsergio.dev/" target="_blank" rel="noreferrer" className="font-bold underline underline-offset-4 active:text-paper">
+          iamsergio.dev
+        </a>
+      </p>
+
       <Deck state={state} me={me} onSearch={() => setSearchOpen(true)} onPlay={() => setPickerOpen(true)} onMine={showMine} />
 
       <SearchSheet open={searchOpen} onClose={() => setSearchOpen(false)} onSupport={support} />
