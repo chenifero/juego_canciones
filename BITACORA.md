@@ -600,3 +600,12 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - **Juego de la carátula en el móvil:** la carátula medía casi 300 px fijos y la cuarta respuesta quedaba fuera de pantalla (reproducido a 390×664). Ahora la carátula ocupa el hueco que sobra (hasta 300 px, mínimo 110) y, en pantallas de menos de 640 px de alto, los botones y huecos se aprietan un poco. Visto en 390×664, 375×548 (iPhone SE) y 430×860 (la carátula sigue a 294 px).
 - **Comprobado por Sergio:** el lector de QR funciona en su móvil.
 - Tipos y `npm test` en verde (126 comprobaciones).
+
+## 16/11/2026 · Tour de bienvenida
+
+- **Decisión de Sergio:** tour sobre la pantalla real (descartadas las 3 tarjetas y la pantalla única).
+- `web/src/components/Tour.tsx`: la primera vez que alguien entra en este móvil (`localStorage` `bg.tour`), se apaga la pantalla menos una pieza real y sale un rótulo de la máquina con icono grande, título y una frase. 4 pasos: **PIDE** → **ranking** («La 1.ª suena después», con el VS ×2) → **JUGAR** → **dosis** («Consume: +15»). Bombillas de progreso, «Saltar» y «Vale»/«¡A jugar!». Se vuelve a ver con el botón **«?»** nuevo de la cabecera.
+- Tocar la pieza iluminada la usa de verdad (abre la búsqueda, los juegos, la ficha o el lector) y da el tour por visto. El paso 1 cambia de texto si ya tienes canción o estás esperando. No sale encima del VS, de un juego, de una dosis ni de un cajón; si empieza un VS, se aparta y vuelve después.
+- **Revisión independiente (Impeccable):** «fix» con 7 arreglos, todos aplicados: pieza encendida que funciona, foco y lector de pantalla (foco al «Vale», Tab atrapado, se anuncia el paso, el foco vuelve al cerrar), escalera larga (scroll al principio de la sección), móvil girado o bajo (el foco se corta para que quepa el rótulo, que nunca sale de pantalla), pieza que no existe (se salta), vuelta arriba al acabar y texto del paso 1 según el estado.
+- Visto en el navegador a 390×844, 375×667 (vacío y con 15 canciones) y 844×390 (girado). Tipos, `npm test` (126) y build en verde. `DESIGN.md` actualizado (sección «Tour de bienvenida»).
+- **Sin ver todavía:** en un móvil real y la escalera vacía después del último ajuste del foco.

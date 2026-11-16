@@ -278,6 +278,14 @@ Tiras de color con letra impresa que caen desde arriba: ámbar (bien), rosa (err
 ### Cara (avatar)
 Redonda, como lo único redondo de la máquina además de bombillas y pulsadores de juego. Muestra el selfie si lo hay y, si no, la inicial del nombre (Bungee, cian) sobre `panel-2`. Va separada de lo que tiene debajo por un filete de 2-4px (`ink` sobre negro, `print` sobre cristal). En el VS, la cara de quien pidió la canción crece de 44 a 68px y monta sobre la esquina de la carátula: es la cara de la canción. El selfie es opcional (se toca la cara al entrar o el chip del alias, cajón «Tu cara») y se borra al cerrar la noche.
 
+### Tour de bienvenida
+Sale una vez por móvil, justo al entrar, y se vuelve a ver con el botón «?» de la cabecera (cuadrado de 36px en `panel`, junto al alias). Enseña la máquina de verdad, no una pantalla aparte: un velo `#050607` al 84 % lo apaga todo menos la pieza del paso, que queda en su hueco con un filo ámbar de 3px y su resplandor (lo que está encendido brilla). El hueco salta de pieza en pieza con un muelle (260/30). Si la pieza es larga (la escalera), el hueco acaba al final de un peldaño entero.
+- **Rótulo:** bisel con fondo `#1b1e24` y un pico que apunta a la pieza; va encima de ella si está en la mitad de abajo y debajo si no. Dentro, un icono de 56px (cristal cian o ámbar, el color de la pieza señalada), título en Bungee 19px y una sola frase en Archivo 600 15px al 75 %. Abajo, el progreso en bombillas, «Saltar» en `mute` y el pulsador ámbar «Vale» («¡A jugar!» en el último).
+- **Pasos (4):** PIDE («Pide tu canción»; si ya tienes canción, «Tu canción, en directo»; si estás esperando, «Aquí se pide»), escalera («La 1.ª suena después», con el VS), JUGAR («Juega y súmale puntos») y dosis («Consume: +N»).
+- **La pieza encendida funciona:** tocarla hace lo suyo (abre la búsqueda, los juegos, la ficha o el lector) y da el tour por visto. Tocar fuera del hueco avanza; Escape lo salta; las flechas pasan de paso y el Tab se queda entre «Saltar» y «Vale».
+- El foco nunca pasa del espacio que deja el rótulo (móvil girado o pequeño) y el rótulo nunca se sale de la pantalla. Al acabar, la página vuelve arriba. Si una pieza no está, se salta su paso.
+- No sale encima del VS, de un juego, de una dosis ni de un cajón abierto. Con movimiento reducido, el hueco salta sin muelle y el rótulo solo aparece.
+
 ### Minijuegos
 Pantalla completa sobre `ink`, limitada a la columna de la máquina (`max-w-lg`). Arriba, siempre la misma tira: a la izquierda la ventanilla LED del tiempo (rosa y latiendo en la recta final) y a la derecha el progreso en bombillas (parejas, aciertos, golpes). El tablero de juego es un bisel con cristal apagado dentro.
 - **Selector:** rejilla de pulsadores ámbar de 3 columnas (icono, nombre en Bungee, puntos máximos en LED y dificultad en 3 bombillas). El último juego, el más difícil, ocupa toda la fila: es el premio gordo.

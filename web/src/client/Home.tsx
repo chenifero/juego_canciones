@@ -1,4 +1,4 @@
-import { Lightning, MusicNotesPlus, Pill, QrCode, WifiSlash } from '@phosphor-icons/react'
+import { Lightning, MusicNotesPlus, Pill, QrCode, Question, WifiSlash } from '@phosphor-icons/react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { GameId, GameSession, MeState, PublicState, SongRequest } from '../../../shared/types.ts'
@@ -15,6 +15,7 @@ import { SearchSheet } from '../components/SearchSheet.tsx'
 import { SongSheet } from '../components/SongSheet.tsx'
 import { Urgency } from '../components/Urgency.tsx'
 import { toast } from '../components/Toasts.tsx'
+import { Tour, tourSeen } from '../components/Tour.tsx'
 import { WinnerOverlay } from '../components/WinnerOverlay.tsx'
 import { GameRunner, startGame } from '../games/GameRunner.tsx'
 import { emit } from '../lib/socket.ts'
@@ -49,6 +50,8 @@ export function Home({
   const [selected, setSelected] = useState<SongRequest | null>(null)
   const [session, setSession] = useState<GameSession | null>(null)
   const [faceOpen, setFaceOpen] = useState(false)
+  // Tour de bienvenida: la primera vez en este móvil (y cuando se toca «?»)
+  const [tourOpen, setTourOpen] = useState(() => !tourSeen())
   // Últimos segundos antes de cerrar: todo se pone en rojo y tiembla (lo gobierna <Urgency>)
   const [urgent, setUrgent] = useState(false)
   const shakeRef = useRef<HTMLDivElement>(null)
@@ -141,8 +144,15 @@ export function Home({
           <img src="/brand/logo-mark.png" alt="" className="h-9 w-auto" />
           <span className="font-display text-[17px] leading-none">BarmaGames</span>
           <button
+            onClick={() => setTourOpen(true)}
+            className="ml-auto grid size-9 shrink-0 place-items-center rounded-machine bg-panel text-mute active:scale-95 active:text-paper"
+            aria-label="Cómo se juega"
+          >
+            <Question size={20} weight="bold" aria-hidden />
+          </button>
+          <button
             onClick={() => setFaceOpen(true)}
-            className="ml-auto flex max-w-[45%] items-center gap-2 rounded-full bg-panel py-1 pl-1 pr-3 active:scale-95"
+            className="flex max-w-[45%] items-center gap-2 rounded-full bg-panel py-1 pl-1 pr-3 active:scale-95"
             aria-label={me.user.photo ? 'Tu cara: cambiar el selfie' : 'Tu cara: hacerte un selfie'}
           >
             <Avatar user={me.user} size={28} ring="border-0" />
@@ -181,6 +191,8 @@ export function Home({
         onClick={() => setScanOpen(true)}
         className="pulsador glass mt-3 flex w-full items-center gap-3 px-3 py-2.5 text-left [--pulsador-glow:rgb(25_195_255/0.45)]"
         data-testid="consume-aviso"
+        data-tour="dosis"
+        style={{ scrollMarginTop: 72 }}
       >
         <Pill size={26} weight="fill" className="shrink-0" aria-hidden />
         <span className="flex-1 text-[15px] font-bold leading-tight">
@@ -192,8 +204,10 @@ export function Home({
         </span>
       </button>
 
-      <h2 className="mb-3 mt-6 font-display text-[18px] leading-none">Ranking</h2>
-      <Ranking state={state} me={me} onSelect={setSelected} />
+      <section data-tour="ranking" className="mt-6 scroll-mt-[72px]">
+        <h2 className="mb-3 font-display text-[18px] leading-none">Ranking</h2>
+        <Ranking state={state} me={me} onSelect={setSelected} />
+      </section>
       </div>
 
       <Deck state={state} me={me} onSearch={() => setSearchOpen(true)} onPlay={() => setPickerOpen(true)} onMine={showMine} />
@@ -228,6 +242,12 @@ export function Home({
       />
       <GameRunner session={session} state={state} me={me} onClose={closeGame} onAgain={nextGame} />
       <WinnerOverlay />
+      <Tour
+        open={tourOpen && !duelOpen && !session && !doseCode && !searchOpen && !pickerOpen && !selected && !faceOpen && !scanOpen}
+        onClose={() => setTourOpen(false)}
+        dosePoints={state.dosePoints}
+        pide={me.activeRequestId ? 'mine' : me.nextRequestAt > Date.now() ? 'wait' : 'ask'}
+      />
     </div>
   )
 }
@@ -314,12 +334,14 @@ function Deck({
         <div className="bezel grid grid-cols-[1fr_104px] gap-3 rounded-machine p-3">
           <button
             onClick={action}
+            data-tour="pide"
             className={cx('pulsador glass grid h-[100px] place-items-center [--pulsador-glow:rgb(25_195_255/0.55)]', canRequest && 'animate-breathe')}
           >
             {face}
           </button>
           <button
             onClick={onPlay}
+            data-tour="jugar"
             className="pulsador flex h-[100px] flex-col items-center justify-center gap-1.5 bg-amber text-print [--pulsador-glow:rgb(255_194_61/0.45)]"
             aria-label={`Jugar. Te ${me.energy === 1 ? 'queda 1 partida' : `quedan ${me.energy} partidas`}`}
           >
