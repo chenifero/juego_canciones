@@ -616,3 +616,12 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - **Causa:** el tope de altura pensado para la escalera larga se aplicaba a todas las piezas, y los pulsadores de abajo quedaban recortados. El aro de «Vale» era el foco de teclado, porque el tour lo enfocaba al abrirse.
 - **Arreglo:** solo se recorta la escalera, y por peldaños enteros; los pulsadores se iluminan siempre enteros. El foco del teclado va al tour entero, y el cambio de paso lo anuncia una zona viva.
 - Visto a 1100×760 y 390×844 (PIDE, ranking vacío y JUGAR). Tipos y `npm test` en verde.
+
+## 16/11/2026 · Jugar por canciones ajenas
+
+- **Aviso de Sergio:** pidió una canción con un móvil y, con otro sin canción, no conseguía jugar por ella.
+- **Causa:** el servidor sí dejaba unirse y jugar, pero la pantalla no guiaba. El cartel «Toca una canción del ranking y únete a su equipo» era un botón que solo desplazaba la pantalla, y JUGAR sin equipo solo decía «Primero elige canción», sin forma de elegirla.
+- **Arreglo:** JUGAR, y ese cartel (ahora «Juega por una canción del ranking»), abren el selector. Si no juegas por ninguna canción, el selector empieza con «¿Por qué canción juegas?» y la lista del ranking; arriba de los juegos sale la canción elegida con «Cambiar». En la ficha de cualquier canción, «Jugar por ella» te une a su equipo y abre los juegos.
+- **Regla nueva (decisión de Sergio):** con canción propia también se puede jugar por otras. Hay dos bolsas: **3 partidas por ronda para la tuya** (como antes) y **3 para ayudar a canciones ajenas**. Al gastar estas, **10 min de espera** (`helpPlays` y `helpCooldownMs` en los ajustes; no están en el panel). La espera se guarda con el jugador, así que sobrevive a un reinicio. La cuenta atrás sale en LED en JUGAR, en el selector y en la ficha. Quien vuelve a jugar por la suya no cuenta como apoyo de su propia canción.
+- Pruebas de humo nuevas: las partidas para ayudar no se recargan con la canción; al gastarlas empieza la espera de 10 min y se rechaza otra partida; con canción propia se juega por otra sin tocar las de la tuya; volver a la tuya. 139 comprobaciones en verde, tipos y build también.
+- Visto en el navegador a 390×844: elegir canción desde JUGAR, «Jugar por ella» desde la ficha, y la cuenta atrás en el selector y en JUGAR, que se mantiene al recargar.

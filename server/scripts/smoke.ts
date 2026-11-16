@@ -249,7 +249,33 @@ async function main() {
   check(await waitFor(() => ana.state?.now.track?.id === r1[0]!.id), `Suena la de Ana: ${ana.state?.now.track?.title}`)
   check(ana.state!.now.requestedBy?.alias === 'Ana', 'Se muestra quién la pidió')
   check(await waitFor(() => ana.me?.activeRequestId === null && ana.me.nextRequestAt > 0), 'Ana entra en espera de 15 min')
-  check(carlos.me?.energy === 3, 'La energía se recarga con la nueva canción')
+  // Carlos no tiene canción: juega por la de Bea con las partidas para otras canciones, que no se recargan con cada canción
+  check(carlos.me?.energy === 1 && !carlos.me.playingOwn, 'Las partidas para otras canciones no se recargan con la canción')
+  await ok(carlos.emit('game:start', { game: 'tap' }), 'Carlos gasta su última partida para otras canciones')
+  check(
+    await waitFor(() => (carlos.me?.helpReadyAt ?? 0) - Date.now() > 9 * 60_000),
+    'Al gastarlas empieza la espera de 10 min (con su hora para la cuenta atrás)',
+  )
+  const tired = await carlos.emit('game:start', { game: 'tap' })
+  check(!tired.ok && /10 min/.test(tired.error), `Sin partidas para otras: ${!tired.ok && tired.error}`)
+
+  // Con canción propia también se puede jugar por otra, con partidas aparte
+  const dani = client({ deviceId: 'dev-dani' })
+  await ok(dani.emit('join', { code, alias: 'Dani' }), 'Dani entra')
+  const r3 = await ok<TrackInfo[]>(dani.emit('search', { q: 'flaca' }), 'Dani busca "flaca"')
+  const reqD = await ok<SongRequest>(dani.emit('request', { trackId: r3[0]!.id }), 'Dani pide su canción')
+  const beaOwn = bea.me!.ownEnergy
+  await ok(bea.emit('support', { requestId: reqD.id }), 'Bea, con su canción en el ranking, se une al equipo de Dani')
+  check(await waitFor(() => bea.me?.teamId === reqD.id && bea.me.playingOwn === false), 'Bea ahora juega por la de Dani')
+  await ok(bea.emit('game:start', { game: 'tap' }), 'Bea juega por la de Dani')
+  check(
+    await waitFor(() => bea.me?.helpEnergy === 2 && bea.me.ownEnergy === beaOwn),
+    'Gasta de las partidas para otras; las de la suya quedan intactas',
+  )
+  await ok(bea.emit('support', { requestId: reqB.id }), 'Bea vuelve a jugar por la suya')
+  check(await waitFor(() => bea.me?.playingOwn === true), 'Bea vuelve a su canción')
+  check(!ana.state!.ranking.find((r) => r.id === reqB.id)!.team.some((t) => t.alias === 'Bea'), 'Bea no sale como apoyo de su propia canción')
+  dani.socket.close()
   const again2 = await ana.emit('request', { trackId: r2[0]!.id })
   check(!again2.ok, `Ana no puede pedir aún (${!again2.ok && again2.error})`)
 

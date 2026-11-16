@@ -288,6 +288,8 @@ Sale una vez por móvil, justo al entrar, y se vuelve a ver con el botón «?» 
 
 ### Minijuegos
 Pantalla completa sobre `ink`, limitada a la columna de la máquina (`max-w-lg`). Arriba, siempre la misma tira: a la izquierda la ventanilla LED del tiempo (rosa y latiendo en la recta final) y a la derecha el progreso en bombillas (parejas, aciertos, golpes). El tablero de juego es un bisel con cristal apagado dentro.
+- **Elegir canción:** si no juegas por ninguna, el selector empieza con «¿Por qué canción juegas?» y la lista del ranking (puesto en Bungee cian, carátula, título, «La tuya» o «De Ana» y sus partidas en bombillas). Arriba de los juegos va la canción elegida en cristal encendido, con «Juegas por la tuya» o «Juegas por la de Ana» y un botón «Cambiar».
+- **Recarga:** sin partidas para canciones ajenas, la cuenta atrás va en una ventanilla LED, una sola vez por pantalla: en el aviso del selector o de la ficha, y en el pulsador JUGAR en lugar de sus bombillas.
 - **Selector:** rejilla de pulsadores ámbar de 3 columnas (icono, nombre en Bungee, puntos máximos en LED y dificultad en 3 bombillas). El último juego, el más difícil, ocupa toda la fila: es el premio gordo.
 - **Cartas (Memoria):** dorso de cristal apagado con la cruz de la botica; al destaparla, ámbar con el símbolo en tinta; pareja hecha, cristal encendido; fallo, rosa.
 - **Aro (Al ritmo):** círculo de cristal encendido con su número y un aro ámbar que se cierra sobre él. El ritmo se ve en una hilera de 6 bombillas: la luz avanza una en cada golpe (con movimiento reducido, destellan todas juntas). Nada depende del sonido.

@@ -18,6 +18,7 @@ import { toast } from '../components/Toasts.tsx'
 import { Tour, tourSeen } from '../components/Tour.tsx'
 import { WinnerOverlay } from '../components/WinnerOverlay.tsx'
 import { GameRunner, startGame } from '../games/GameRunner.tsx'
+import { currentEnergy } from '../lib/energy.ts'
 import { emit } from '../lib/socket.ts'
 import { useServerNow } from '../lib/store.ts'
 import { cx, fmtTime, vibrate } from '../lib/util.ts'
@@ -229,7 +230,18 @@ export function Home({
         }}
       />
       <FaceSheet open={faceOpen} onClose={() => setFaceOpen(false)} user={me.user} />
-      <GamePicker open={pickerOpen} onClose={() => setPickerOpen(false)} state={state} me={me} onStart={play} />
+      <GamePicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        state={state}
+        me={me}
+        onStart={play}
+        onPick={support}
+        onSearch={() => {
+          setPickerOpen(false)
+          setSearchOpen(true)
+        }}
+      />
       <ScanSheet open={scanOpen} onClose={() => setScanOpen(false)} onCode={onScanned} />
       <DoseSheet code={doseCode} state={state} me={me} onClose={clearDose} />
       <DuelOverlay
@@ -271,6 +283,7 @@ function Deck({
   const mineLocked = !!state.locked && state.locked.id === me.activeRequestId
   const wait = me.nextRequestAt > now ? me.nextRequestAt - now : 0
   const canRequest = !me.activeRequestId && wait === 0
+  const energy = currentEnergy(me, now)
 
   let face: React.ReactNode
   let action = onSearch
@@ -343,11 +356,21 @@ function Deck({
             onClick={onPlay}
             data-tour="jugar"
             className="pulsador flex h-[100px] flex-col items-center justify-center gap-1.5 bg-amber text-print [--pulsador-glow:rgb(255_194_61/0.45)]"
-            aria-label={`Jugar. Te ${me.energy === 1 ? 'queda 1 partida' : `quedan ${me.energy} partidas`}`}
+            aria-label={
+              energy.readyAt
+                ? `Jugar. Vuelves a jugar en ${fmtTime(energy.readyAt - now)}`
+                : `Jugar. Te ${energy.left === 1 ? 'queda 1 partida' : `quedan ${energy.left} partidas`}`
+            }
           >
             <Lightning size={26} weight="fill" aria-hidden />
             <span className="font-display text-[15px] leading-none">Jugar</span>
-            <Bulbs count={me.maxEnergy} lit={me.energy} size={7} className="w-12" />
+            {energy.readyAt ? (
+              <span className="led-well rounded-[3px] px-1.5 py-0.5">
+                <Led value={fmtTime(energy.readyAt - now)} className="text-[12px]" />
+              </span>
+            ) : (
+              <Bulbs count={energy.max} lit={energy.left} size={7} className="w-12" />
+            )}
           </button>
         </div>
       </div>

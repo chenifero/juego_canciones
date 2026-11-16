@@ -92,8 +92,19 @@ export interface MeState {
   /** Por qué espera para pedir: el tope de canciones por hora o la espera tras sonar la suya. */
   waitReason: 'hour' | 'cooldown' | null
   maxPerHour: number
+  /** Partidas que quedan para la canción por la que juegas ahora (la tuya o la de otro equipo). */
   energy: number
   maxEnergy: number
+  /** ¿Juegas ahora por tu propia canción? */
+  playingOwn: boolean
+  /** Partidas por la tuya en esta ronda (se recargan con cada canción). */
+  ownEnergy: number
+  ownMax: number
+  /** Partidas para ayudar a canciones ajenas. Al gastarlas, hay que esperar hasta `helpReadyAt`. */
+  helpEnergy: number
+  helpMax: number
+  /** Epoch ms en que se recargan las partidas de ayudar (0 = no hay espera). */
+  helpReadyAt: number
 }
 
 export interface Settings {
@@ -107,6 +118,10 @@ export interface Settings {
   noRepeatMs: number
   maxDurationMs: number
   energyPerRound: number
+  /** Partidas para jugar por canciones ajenas antes de la espera. */
+  helpPlays: number
+  /** Espera al gastar las partidas de ayudar. */
+  helpCooldownMs: number
   waitBonus: number
   expireRounds: number
   blockExplicit: boolean

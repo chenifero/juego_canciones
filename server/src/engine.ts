@@ -49,6 +49,8 @@ export const DEFAULT_SETTINGS: Settings = {
   noRepeatMs: 2 * HOUR,
   maxDurationMs: 7 * MIN,
   energyPerRound: 3,
+  helpPlays: 3,
+  helpCooldownMs: 10 * MIN,
   waitBonus: 1,
   expireRounds: 8,
   blockExplicit: false,
@@ -64,6 +66,9 @@ interface User {
   requestTimes: number[]
   lastPlayedAt: number
   teamId: string | null
+  /** Partidas gastadas por canciones ajenas y cuándo se recargan (0 = sin espera). Se guardan: la espera sobrevive a un reinicio. */
+  helpUsed?: number
+  helpReadyAt?: number
   /** Versión del selfie (0 = sin foto). Cambia cada vez que sube una nueva. */
   photoV?: number
 }
@@ -411,12 +416,12 @@ export class Engine {
   support(u: User, requestId: unknown): { points: number; message: string } {
     const r = typeof requestId === 'string' ? this.requests.get(requestId) : undefined
     if (!r) throw new GameError('Esa canción ya no está en el ranking')
-    const own = this.activeRequestOf(u)
-    if (own && own.id !== r.id) throw new GameError('Tu equipo es tu canción: no puedes cambiarte mientras esté en el ranking')
+    // Con canción propia también se puede jugar por otra (con sus propias partidas, ver helpLeft)
     if (u.teamId !== r.id) {
       this.leaveTeam(u)
       u.teamId = r.id
-      if (!r.supporters.includes(u.id)) r.supporters.push(u.id)
+      // Quien vuelve a jugar por la suya no se cuenta como apoyo de su propia canción
+      if (r.userId !== u.id && !r.supporters.includes(u.id)) r.supporters.push(u.id)
     }
     let points = 0
     let message = `Te has unido al equipo de «${r.track.title}»`
@@ -447,11 +452,23 @@ export class Engine {
 
   /** ¿Juega este usuario en el VS (su equipo es una de las dos finalistas)? */
   inDuel(u: User): boolean {
-    return this.phase === 'duel' && !!this.duel && !!u.teamId && (u.teamId === this.duel.aId || u.teamId === this.duel.bId)
+    const t = this.teamOf(u)?.id
+    return this.phase === 'duel' && !!this.duel && !!t && (t === this.duel.aId || t === this.duel.bId)
   }
 
   energyLeft(u: User): number {
     return Math.max(0, this.settings.energyPerRound - (this.energyUsed.get(u.id) ?? 0))
+  }
+
+  /** Partidas para canciones ajenas que le quedan (si ya pasó la espera, vuelven a estar todas). */
+  helpLeft(u: User, now = Date.now()): number {
+    if (u.helpReadyAt && now >= u.helpReadyAt) return this.settings.helpPlays
+    return Math.max(0, this.settings.helpPlays - (u.helpUsed ?? 0))
+  }
+
+  /** La canción por la que juega: su equipo si sigue en el ranking; si no, la suya. */
+  teamOf(u: User): Req | undefined {
+    return (u.teamId ? this.requests.get(u.teamId) : undefined) ?? this.activeRequestOf(u)
   }
 
   /** Las canciones de esta noche (ranking, cola y lo que ha sonado): salen antes en la carátula pixelada. */
@@ -467,15 +484,20 @@ export class Engine {
   startGame(u: User, game: unknown, pool: TrackInfo[] = [], albums: AlbumInfo[] = []): GameSession {
     const duel = this.inDuel(u)
     if (!duel && !GAME_IDS.includes(game as GameId)) throw new GameError('Juego desconocido')
-    const r = u.teamId ? this.requests.get(u.teamId) : undefined
-    if (!r) throw new GameError('Primero pide una canción o únete a un equipo', 'NO_TEAM')
+    const r = this.teamOf(u)
+    if (!r) throw new GameError('Primero elige por qué canción juegas', 'NO_TEAM')
+    const own = r.userId === u.id
     if (this.frozen(r)) {
       throw new GameError(
         this.phase === 'duel' ? '¡Duelo final! Únete a una de las dos finalistas para jugar' : 'Tu canción ya no admite puntos',
         'FROZEN',
       )
     }
-    if (!duel && this.energyLeft(u) <= 0) throw new GameError('Sin energía: se recarga con la siguiente canción', 'NO_ENERGY')
+    if (!duel && own && this.energyLeft(u) <= 0) throw new GameError('Sin partidas por la tuya: se recargan con la siguiente canción', 'NO_ENERGY')
+    if (!duel && !own && this.helpLeft(u) <= 0) {
+      const mins = Math.max(1, Math.ceil(((u.helpReadyAt ?? 0) - Date.now()) / MIN))
+      throw new GameError(`Sin partidas para otras canciones: vuelves a jugar en ${mins} min`, 'NO_ENERGY')
+    }
 
     const buildQuiz = (g: GameId): BuiltRound[] | null | undefined => {
       if (g === 'cover') return buildCoverQuiz(albums)
@@ -512,7 +534,17 @@ export class Engine {
       const built = buildQuiz(g)
       if (built === null) throw new GameError('Aún no hay datos suficientes para este juego. Prueba otro', 'NO_POOL')
       quiz = built
-      this.energyUsed.set(u.id, (this.energyUsed.get(u.id) ?? 0) + 1)
+      if (own) this.energyUsed.set(u.id, (this.energyUsed.get(u.id) ?? 0) + 1)
+      else {
+        // Partidas por canciones ajenas: al gastar la última empieza la espera
+        const now = Date.now()
+        if (u.helpReadyAt && now >= u.helpReadyAt) {
+          u.helpUsed = 0
+          u.helpReadyAt = 0
+        }
+        u.helpUsed = (u.helpUsed ?? 0) + 1
+        if (u.helpUsed >= this.settings.helpPlays) u.helpReadyAt = now + this.settings.helpCooldownMs
+      }
     }
     const s: Session = {
       id: id(8),
@@ -879,17 +911,27 @@ export class Engine {
     const hourEnd = recent.length >= this.settings.maxPerHour ? recent[0]! + HOUR : 0
     const next = Math.max(cooldownEnd, hourEnd)
     const waitReason = next <= now ? null : hourEnd >= cooldownEnd ? 'hour' : 'cooldown'
+    const team = this.teamOf(u)
+    const playingOwn = !team || team.userId === u.id
+    const ownEnergy = this.energyLeft(u)
+    const helpEnergy = this.helpLeft(u, now)
     return {
       user: this.pub(u)!,
       activeRequestId: this.activeRequestOf(u)?.id ?? null,
       votedThisRound: this.voted.has(u.id),
-      teamId: u.teamId,
+      teamId: team?.id ?? null,
       nextRequestAt: next > now ? next : 0,
       requestsLastHour: recent.length,
       waitReason,
       maxPerHour: this.settings.maxPerHour,
-      energy: this.energyLeft(u),
-      maxEnergy: this.settings.energyPerRound,
+      energy: playingOwn ? ownEnergy : helpEnergy,
+      maxEnergy: playingOwn ? this.settings.energyPerRound : this.settings.helpPlays,
+      playingOwn,
+      ownEnergy,
+      ownMax: this.settings.energyPerRound,
+      helpEnergy,
+      helpMax: this.settings.helpPlays,
+      helpReadyAt: helpEnergy === 0 ? (u.helpReadyAt ?? 0) : 0,
     }
   }
 

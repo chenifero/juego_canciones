@@ -1,5 +1,8 @@
 import { Camera, Lightning } from '@phosphor-icons/react'
 import type { MeState, PublicState, SongRequest } from '../../../shared/types.ts'
+import { energyFor } from '../lib/energy.ts'
+import { useServerNow } from '../lib/store.ts'
+import { Recharge } from './GamePicker.tsx'
 import { Bulbs, Led, Stamp } from './machine.tsx'
 import { TeamBubbles } from './Ranking.tsx'
 import { Sheet } from './Sheet.tsx'
@@ -17,7 +20,7 @@ export function SongSheet({
   state: PublicState
   me: MeState | null
   onClose: () => void
-  onSupport: (id: string) => void
+  onSupport: (id: string) => Promise<void>
   onPlay: () => void
   /** Abrir «Tu cara» para hacerse el selfie del VS. */
   onFace: () => void
@@ -29,9 +32,11 @@ export function SongSheet({
   const frozen = state.phase === 'duel' && !inDuel
   const mine = !!r && me?.activeRequestId === r.id
   const myTeam = !!r && me?.teamId === r.id
-  const ownOther = !!me?.activeRequestId && me.activeRequestId !== r?.id
   const voteValue = inDuel ? 2 : 1
-  const canVote = !me?.votedThisRound && !frozen && !ownOther
+  const canVote = !me?.votedThisRound && !frozen
+  const now = useServerNow(2)
+  // Por la tuya juegas con las partidas de la ronda; por las demás, con las de ayudar (y su espera)
+  const energy = energyFor(me, mine, now)
 
   return (
     <Sheet open={!!request} onClose={onClose} title={r ? `Puesto ${pos}` : ' '}>
@@ -61,9 +66,6 @@ export function SongSheet({
           </div>
 
           {frozen && <p className="text-[15px] font-semibold text-pink">Duelo en marcha: esta espera a la siguiente ronda.</p>}
-          {ownOther && !myTeam && (
-            <p className="text-[15px] text-mute">Mientras la tuya siga en el ranking, juegas para la tuya.</p>
-          )}
 
           <div className="grid gap-3">
             {canVote && (
@@ -74,20 +76,25 @@ export function SongSheet({
                 {myTeam ? `Votar +${voteValue}` : `Apoyar +${voteValue}`}
               </button>
             )}
-            {!canVote && !myTeam && !ownOther && !frozen && (
-              <button onClick={() => onSupport(r.id)} className="pulsador h-14 bg-panel-2 font-display text-[16px]">
-                Unirme a su equipo
-              </button>
-            )}
-            {myTeam && (
+            {!frozen && (
               <button
-                disabled={frozen || (me?.energy ?? 0) <= 0}
-                onClick={onPlay}
+                disabled={energy.left <= 0}
+                onClick={async () => {
+                  // Jugar por ella te une a su equipo (si no lo estabas) y abre los juegos
+                  if (!myTeam) await onSupport(r.id)
+                  onPlay()
+                }}
                 className="pulsador flex h-16 items-center justify-center gap-3 bg-amber font-display text-[18px] text-print [--pulsador-glow:rgb(255_194_61/0.45)]"
               >
-                <Lightning size={24} weight="fill" aria-hidden /> Jugar por ella
-                <Bulbs count={me?.maxEnergy ?? 3} lit={me?.energy ?? 0} size={8} className="w-14" />
+                <Lightning size={24} weight="fill" aria-hidden /> {mine ? 'Jugar por la tuya' : 'Jugar por ella'}
+                {!energy.readyAt && <Bulbs count={energy.max} lit={energy.left} size={8} className="w-14" />}
               </button>
+            )}
+            {!frozen && energy.readyAt > 0 && (
+              <div className="flex items-center gap-3 rounded-machine bg-panel-2 px-3 py-2.5">
+                <p className="flex-1 text-[14px] font-bold leading-snug">Sin partidas para otras canciones. Vuelves a jugar en</p>
+                <Recharge readyAt={energy.readyAt} now={now} />
+              </div>
             )}
             {mine && !me?.user.photo && (
               <button onClick={onFace} className="pulsador flex h-14 items-center justify-center gap-2 bg-panel-2 font-display text-[15px]">
