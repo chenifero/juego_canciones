@@ -632,3 +632,51 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
 - **Consola:** se copió la firma de SpiritDex (`web/src/lib/consoleSignature.ts` y `web/public/console-face.png`): la cara, «IAMSERGIO.DEV» en ASCII y «¿fisgoneando el código? 👀 hecho por https://iamsergio.dev». Sale al arrancar cualquier página (juego, panel y cartel). La imagen es del propio dominio, así que la CSP la deja pasar.
 - **Web:** «Hecho por iamsergio.dev» en 12 px gris al final de la portada, bajo el ranking. Enlaza a https://iamsergio.dev/ en una pestaña nueva.
 - Visto a 390×844 en el simulador: el crédito queda por encima de los pulsadores y la consola muestra la firma sin errores de CSP. Tipos y build en verde.
+
+## 18/11/2026 · Guion de presentación para clientes
+
+- **Petición de Sergio:** un guión de 30–40 s para presentar la app a los clientes (los bares), con todas las partes, los minijuegos y, sobre todo, la funcionalidad.
+- **Guion (≈96 palabras, ~35 s):** 1) gancho: los clientes ponen la música; 2) entrada por QR del cartel, alias, sin registro; 3) ranking en directo y duelo del último minuto (#1 vs #2, ×2) con la ganadora a la cola de Spotify; 4) cómo subir: votar, 7 minijuegos, consumición con QR de un solo uso; 5) la dueña lo controla desde su móvil.
+- No se menciona el happy hour (eliminado el 14/11).
+
+## 18/11/2026 · Guía de vídeos de lanzamiento (Higgsfield, @sanjii)
+
+- Sergio pidió leer e interiorizar la guía «How to Make SaaS Launch Videos With Claude: Motion Skill + Prompts». La página se pinta con JavaScript y la extensión de Chrome no estaba conectada; el texto se sacó del documento Yjs que la página carga desde `cdn.higgsfield.ai/blog/…bin`.
+- Resumen guardado en la memoria del proyecto (`guia-video-lanzamiento`).
+- **Choque con el guion de presentación:** la guía va **sin voz en off** (música y efectos, texto en pantalla), y nuestro guion de 35 s está pensado para leerlo en voz alta.
+- La skill `launch-motion` (zip en la CDN de Higgsfield) **no se ha descargado**: queda pendiente de que Sergio lo autorice.
+
+## 18/11/2026 · Vídeo promo de 40 s (vertical, para enseñar a dueños de bares)
+
+- **Petición de Sergio:** vídeo de unos 40 s siguiendo la guía de Higgsfield, con la locución de `video/voicestudio-…wav`, música, «Houdini» de Dua Lipa sonando cuando gana el VS y trozos jugando a los juegos que nombra la voz. Decisiones suyas: vertical 9:16, «Houdini» real (uso interno, no se sube a redes) y catálogo de HeyGen para la base.
+- **Grabación de la app real:** copia aparte del simulador (puerto 3100, datos temporales; el proyecto no se toca) con las carátulas reales de Spotify sacadas con las claves del `.env`, «Houdini» añadida al catálogo y rutas para mover el reloj de la canción. Un guion de Playwright (`director.mjs`, en la carpeta temporal) mete 14 clientes falsos por socket y graba con el screencast de Chrome a 1170×2532: entrada con código, ranking en directo, voto, selector de juegos, Reflejos, Memoria, Trivia (5/5), Carátula (3/3), dosis +15, VS con remontada (Houdini 48 → 88 contra 87), «¡PREMIO! Houdini», SUENA y el mando de la dueña.
+- **Montaje:** HyperFrames en `video/promo/` (`index.html` con el móvil y la cámara; `compositions/hook.html`, `rotulos.html` y `final.html` con los rótulos; `SPEC.md` con el plan por segundos). Fuentes de la app (Bungee, Archivo, DSEG7), fondos con la carátula desenfocada como en la app y bombillas de la marquesina.
+- **Sonido:** locución; base «upbeat disco party» del catálogo de HeyGen (126 BPM) hasta los 20 s; «Houdini» desde su pulso 51,0 s justo cuando gana, más fuerte en el cierre; efectos (whoosh, clics en los toques, pop en los sellos, riser e impacto una vez).
+- **Sin vídeo de recurso de bar:** buscarlo pedía instalar la CLI de HeyGen y el vídeo funciona con la app real.
+- **Salida:** `video/BarmaGames_promo.mp4`.
+- **Ojo:** `video/` no está en git y lleva la canción con derechos y 38 MB de clips; no subirla.
+
+## 20/11/2026 · Cuenta atrás del VS y móvil solo en vertical
+
+- **Petición de Sergio:** una cuenta atrás de 10 s antes del VS, en el centro de la pantalla, con carátula 1 VS carátula 2, en neón; y que no se pueda girar la pantalla.
+- **Servidor:** el estado público lleva `duelAt` (cuándo empieza el duelo: cierre − ventana del duelo; null si hay menos de dos canciones). Cerca del duelo el bucle mira cada segundo, igual que antes del cierre, para que el VS entre a su hora.
+- **Cuenta atrás (`web/src/components/DuelCountdown.tsx`):** letrero de neón con dos tubos, cian para la #1 y rosa para la #2, que se encienden parpadeando. Dentro: bombillas que corren, «Duelo final», las dos carátulas con su tubo, «VS» que late con cada segundo, los segundos en LED (ámbar; rojos en los 3 últimos), 10 bombillas que se apagan una por segundo y «Puntos ×2». Si cambia el #1 o el #2 en esos 10 s, la carátula se cambia sola. Se cierra con la X o tocando fuera; no sale encima de un juego. En los 3 últimos segundos el móvil da un toque. Al empezar el duelo se apaga y entra el VS de siempre.
+- **Giro bloqueado (`web/src/components/RotateLock.tsx`):** el manifest pide vertical (app instalada) y se intenta fijar el vertical donde el navegador lo deja (Android a pantalla completa). Donde no se puede (iPhone, Chrome sin instalar), con el móvil tumbado se tapa todo con «Pon el móvil en vertical». Vale para el juego y el panel; el cartel no se bloquea.
+- Visto en un simulador aparte (puerto 3100, datos temporales) a 390×844 con dos canciones: la cuenta atrás de 10 a 0, el paso al VS y el móvil tumbado. Tipos, `npm test` y build en verde.
+
+## 20/11/2026 · Tour de bienvenida del mando (`/admin`)
+
+- **Petición de Sergio:** un onboarding muy bien explicado para el panel de la dueña.
+- **Cómo es:** el mismo foco que el tour del cliente (todo apagado menos la pieza real del mando, con su rótulo al lado), pero con más explicación. Sale la primera vez que la dueña entra en el panel y se repite con el botón «?» nuevo de la cabecera. Tiene «Atrás» y «Saltar»; la pieza iluminada no se dispara durante el tour (tocarla pasa de paso, para no sacar una dosis o saltar una canción sin querer). No sale encima de un cajón ni de una dosis.
+- **Pasos (8 con la barra abierta, 7 cerrada):**
+  1. «Así se lleva la noche» (en el centro): qué es el juego y lo único que tiene que hacer ella: Spotify sonando en ese móvil, abrir la barra y dar el código, una dosis por consumición, y lo demás va solo.
+  2. Lo que suena: canción, la de después y el contador hasta el cierre (20 s antes del final la ganadora entra en la cola). Bombilla ámbar = Spotify bien; rosa = aviso. No tocar la cola a mano.
+  3. El código de hoy (o «Abre la barra» si está cerrada).
+  4. Dosis: el QR, +puntos, un solo uso y 90 s.
+  5. Saltar: el doble toque, que es como funciona todo lo que borra.
+  6. Ranking, gente y ajustes, cada uno con lo que hace.
+  7. Cerrar la noche: se borra todo (con la barra abierta).
+  8. «¿Se te olvida algo?» sobre el «?».
+- **Código:** `web/src/admin/AdminTour.tsx` (pasos). El motor de `Tour.tsx` pasa a ser `GuidedTour`, que sirve para los dos tours: pasos sin pieza (en el centro), rótulo ancho con lista y consejo en ámbar, «Atrás» y pieza que no se dispara. El tour del cliente se ve igual que antes.
+- Recorrido entero a 390×844 con la barra abierta y cerrada; el tour del cliente comprobado. Tipos, `npm test` y build en verde.
+

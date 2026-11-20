@@ -9,6 +9,7 @@ import {
   Power,
   Printer,
   Prohibit,
+  Question,
   SignOut,
   SkipForward,
   SlidersHorizontal,
@@ -26,10 +27,12 @@ import type { AdminState, PublicState, Settings } from '../../../shared/types.ts
 import { Avatar } from '../components/Avatar.tsx'
 import { Bulbs, Led, Stamp } from '../components/machine.tsx'
 import { Sheet } from '../components/Sheet.tsx'
+import { tourSeen } from '../components/Tour.tsx'
 import { toast } from '../components/Toasts.tsx'
 import { emit, session, socket } from '../lib/socket.ts'
 import { connect, progressAt, useServerNow, useStore } from '../lib/store.ts'
 import { cx, fmtTime, vibrate } from '../lib/util.ts'
+import { ADMIN_TOUR_KEY, AdminTour } from './AdminTour.tsx'
 
 type AdminFull = AdminState & {
   musicError: { message: string; at: number } | null
@@ -178,12 +181,15 @@ function ConfirmButton({
   armedChildren,
   className = '',
   label,
+  tour,
 }: {
   onConfirm: () => void
   children: ReactNode
   armedChildren: ReactNode
   className?: string
   label?: string
+  /** Pieza del tour de bienvenida (`data-tour`). */
+  tour?: string
 }) {
   const [armed, setArmed] = useState(false)
   useEffect(() => {
@@ -194,6 +200,7 @@ function ConfirmButton({
   return (
     <button
       aria-label={label}
+      data-tour={tour}
       onClick={() => {
         if (armed) {
           setArmed(false)
@@ -273,6 +280,8 @@ function Panel({ state, admin, connected, onLogout }: { state: PublicState; admi
   const now = useServerNow(4)
   const [dose, setDose] = useState<{ code: string; points: number; expiresAt: number } | null>(null)
   const [drawer, setDrawer] = useState<null | 'ranking' | 'gente' | 'ajustes'>(null)
+  // La primera vez que entra, el mando se explica solo; luego, con el botón «?»
+  const [tourOpen, setTourOpen] = useState(() => !tourSeen(ADMIN_TOUR_KEY))
   const s = admin.settings
 
   const act = useCallback(async (ev: string, p: object = {}, ok?: string) => {
@@ -315,7 +324,15 @@ function Panel({ state, admin, connected, onLogout }: { state: PublicState; admi
         <div className="mt-3 flex items-center gap-2.5">
           <img src="/brand/logo-mark.png" alt="" className="h-9 w-auto" />
           <span className="font-display text-[17px] leading-none">Mando de la barra</span>
-          <button onClick={onLogout} className="ml-auto grid size-10 place-items-center rounded-machine bg-panel-2" aria-label="Salir del mando">
+          <button
+            data-tour="ayuda"
+            onClick={() => setTourOpen(true)}
+            className="ml-auto grid size-10 place-items-center rounded-machine bg-panel-2 text-mute active:scale-95 active:text-paper"
+            aria-label="Cómo funciona el mando"
+          >
+            <Question size={20} weight="bold" aria-hidden />
+          </button>
+          <button onClick={onLogout} className="grid size-10 place-items-center rounded-machine bg-panel-2" aria-label="Salir del mando">
             <SignOut size={20} weight="bold" />
           </button>
         </div>
@@ -323,7 +340,7 @@ function Panel({ state, admin, connected, onLogout }: { state: PublicState; admi
 
       {/* Código de la noche: lo dice la dueña a quien llega */}
       {state.open && (
-        <section className="glass mb-3 flex items-center gap-3 rounded-machine p-2.5" aria-label="Código de la noche">
+        <section data-tour="codigo" className="glass mb-3 flex items-center gap-3 rounded-machine p-2.5" aria-label="Código de la noche">
           <span className="flex-1 font-display text-[15px] leading-tight">Código de hoy: díselo a quien llegue</span>
           <span className="led-well rounded-[4px] px-2.5 py-1.5">
             <Led value={admin.nightCode} digits={4} className="text-[28px]" />
@@ -346,7 +363,7 @@ function Panel({ state, admin, connected, onLogout }: { state: PublicState; admi
       )}
 
       {/* Tira SUENA */}
-      <section className="bezel rounded-machine p-[3px]" aria-label="Estado de la música">
+      <section data-tour="suena" className="bezel rounded-machine p-[3px]" aria-label="Estado de la música">
         <div className={cx('flex items-center gap-3 rounded-[4px] p-2.5', state.open && track ? 'glass' : 'glass-dim')}>
           <span className="flex shrink-0 flex-col items-center gap-1" aria-label={musicOk && connected ? 'Spotify funciona' : 'Spotify con problemas'}>
             <SpotifyLogo size={20} weight="fill" aria-hidden />
@@ -400,6 +417,7 @@ function Panel({ state, admin, connected, onLogout }: { state: PublicState; admi
       <div className="bezel mt-auto rounded-machine p-3">
         <div className="grid h-[190px] grid-cols-[1.55fr_1fr] gap-3">
           <button
+            data-tour="dosis"
             disabled={!state.open}
             onClick={giveDose}
             className={cx(
@@ -416,6 +434,7 @@ function Panel({ state, admin, connected, onLogout }: { state: PublicState; admi
 
           <ConfirmButton
             onConfirm={() => act('admin:skip')}
+            tour="saltar"
             className="pulsador flex flex-col items-center justify-center gap-2 bg-panel-2"
             label="Saltar canción"
             armedChildren={
@@ -430,13 +449,13 @@ function Panel({ state, admin, connected, onLogout }: { state: PublicState; admi
           </ConfirmButton>
         </div>
 
-        <div className="mt-3 grid grid-cols-3 gap-3">
+        <div data-tour="teclas" className="mt-3 grid grid-cols-3 gap-3">
           <DrawerKey icon={ListNumbers} label="Ranking" count={state.ranking.length} onClick={() => setDrawer('ranking')} />
           <DrawerKey icon={UsersThree} label="Gente" count={admin.users.length} onClick={() => setDrawer('gente')} />
           <DrawerKey icon={SlidersHorizontal} label="Ajustes" onClick={() => setDrawer('ajustes')} />
         </div>
 
-        <div className="mt-3">
+        <div data-tour="noche" className="mt-3">
           {state.open ? (
             <ConfirmButton
               onConfirm={() => act('admin:night', { open: false }, 'Noche cerrada. Todo borrado.')}
@@ -465,6 +484,13 @@ function Panel({ state, admin, connected, onLogout }: { state: PublicState; admi
       <PeopleDrawer open={drawer === 'gente'} onClose={() => setDrawer(null)} admin={admin} act={act} />
       <SettingsDrawer open={drawer === 'ajustes'} onClose={() => setDrawer(null)} state={state} admin={admin} />
       <DoseModal dose={dose} onClose={() => setDose(null)} />
+      <AdminTour
+        open={tourOpen && !drawer && !dose}
+        onClose={() => setTourOpen(false)}
+        barOpen={state.open}
+        dosePoints={s.dosePoints}
+        lockSecs={Math.round(s.lockBeforeEndMs / 1000)}
+      />
     </div>
   )
 }

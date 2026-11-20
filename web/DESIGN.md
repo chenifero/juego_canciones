@@ -260,6 +260,12 @@ Pulsador ámbar a todo lo ancho bajo la ventana SUENA, con el titular en Bungee 
 ### Alarma de cierre (Urgency)
 En los últimos 10 s antes de cerrar las votaciones, con canciones en el ranking: viñeta roja que late sobre toda la pantalla (cada 0,5 s en los 3 últimos), la columna de contenido tiembla una vez por segundo (3,5 px; 7 px en los 3 últimos) y el móvil vibra (también más fuerte al final; iPhone no vibra desde la web). Los LED del tiempo pasan a **rojo** (`red`, #ff4d5e), no a rosa. Con movimiento reducido no hay temblor, solo la viñeta.
 
+### Cuenta atrás del VS
+Los 10 s antes del duelo, en el centro de la pantalla sobre un velo `#050607` al 85 %. Es el único **letrero de neón** de la máquina: un marco de dos tubos de 3px, cian a la izquierda (la #1) y rosa a la derecha (la #2), separados en el centro, cuya luz se derrama hacia su lado; al aparecer se encienden parpadeando (0,9 s). Dentro, un panel negro con la luz de los tubos en los cantos: bombillas que persiguen, «Duelo final» en Bungee 24px como rótulo de tubo (núcleo blanco con halo cian y rosa), las dos carátulas con su tubo y su cara en la esquina, «VS» en Bungee 38px que late con cada segundo, los segundos en una ventanilla LED de 48px (ámbar; rojo en los 3 últimos), 10 bombillas que se apagan una por segundo y «Puntos ×2» en ámbar. Se cierra con la X o tocando fuera y nunca tapa un juego. El neón es solo de este momento: fuera de él sigue la regla de no hacer tarjetas con acento neón.
+
+### Móvil tumbado
+El juego y el panel solo van en vertical. Con un móvil en horizontal se tapa todo con un cristal cian con el icono de girar, «Pon el móvil en vertical» en Bungee 22px y una frase en `mute`.
+
 ### Escalera de premios
 Una sola columna de cristal dentro de un bisel, un peldaño por canción. El #1 (o el lado A del duelo) es cristal encendido con la bombilla de su peldaño encendida; el rival es cristal rosa; el resto, cristal apagado. Durante el duelo los peldaños congelados bajan al 45 %. Cuando una canción suma, su peldaño y su bombilla destellan en ámbar (0,9 s). Los peldaños se reordenan con un muelle (380/32).
 
@@ -302,6 +308,7 @@ El panel sigue la estructura del mando a distancia:
 - **Abajo, anclada con `mt-auto` para el pulgar,** la botonera dentro de un bezel:
   - Tres columnas, `1fr 1.55fr 1fr`, de 190px de alto: **HAPPY** (ámbar cuando está activa), **DOSIS** (el único pulsador de cristal cian, que respira con la barra abierta y lleva sus puntos en LED) y **SALTAR** (metal, con doble toque).
   - Debajo, tres teclas de cajón de 84px con una fila de icono y LED de altura fija (`h-6`) y una tecla de NOCHE a todo lo ancho.
+- **Tour de bienvenida:** el mismo foco que el del cliente, con rótulo ancho: el icono y el título arriba y la explicación debajo a todo lo ancho, con una lista de icono y frase cuando el paso explica varias cosas y un consejo en una tira ámbar al 10 % con una bombilla. Empieza con «Así se lleva la noche» en el centro (todo apagado) y sigue por SUENA, el código (o Abrir la barra), DOSIS, SALTAR, las tres teclas, la noche y el «?» de la cabecera. Lleva «Atrás», «Saltar» y el pulsador ámbar («Enséñamelo» al principio, «¡A servir!» al final). Durante el tour la pieza iluminada no se dispara: tocarla pasa de paso. Sale la primera vez y se repite con «?».
 - **Confirmaciones:** sin diálogos del navegador. El primer toque arma el botón, que se pone rosa con la pregunta; el segundo confirma; a los 3 s se desarma.
 
 ### Ajuste −/+

@@ -1,6 +1,6 @@
-import { Lightning, MusicNotesPlus, Pill, Ranking as RankingIcon, type Icon } from '@phosphor-icons/react'
+import { Lightbulb, Lightning, MusicNotesPlus, Pill, Ranking as RankingIcon, type Icon } from '@phosphor-icons/react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { cx } from '../lib/util.ts'
 import { Bulbs } from './machine.tsx'
 
@@ -13,34 +13,47 @@ const MAX_SPOT = 280
 const MIN_SPOT = 64
 
 /** ¿Este móvil ya vio el tour? (en modo privado puede fallar: entonces se enseña) */
-export function tourSeen(): boolean {
+export function tourSeen(key = KEY): boolean {
   try {
-    return localStorage.getItem(KEY) === '1'
+    return localStorage.getItem(key) === '1'
   } catch {
     return false
   }
 }
-function markSeen(): void {
+function markSeen(key: string): void {
   try {
-    localStorage.setItem(KEY, '1')
+    localStorage.setItem(key, '1')
   } catch {
     /* sin persistencia: no pasa nada */
   }
 }
 
+export type TourStep = {
+  /** Pieza que se ilumina (`data-tour`). Sin ella, el rótulo sale en el centro con todo apagado. */
+  target?: string
+  icon: Icon
+  /** Color del icono: el de la pieza señalada. */
+  tone: 'cyan' | 'amber' | 'metal'
+  title: string
+  body: ReactNode
+  /** Lista corta bajo la frase (icono + texto), para pasos que explican varias cosas. Solo en rótulo ancho. */
+  list?: { icon: Icon; text: ReactNode }[]
+  /** Consejo práctico en ámbar, al pie. Solo en rótulo ancho. */
+  tip?: ReactNode
+}
+
 /** En qué está el pulsador PIDE ahora, para que el rótulo no le contradiga. */
 export type PideMode = 'ask' | 'mine' | 'wait'
-type Step = { target: string; icon: Icon; tone: 'cyan' | 'amber'; title: string; body: string }
 
-function steps(dosePoints: number, pide: PideMode): Step[] {
-  const first: Record<PideMode, Pick<Step, 'title' | 'body'>> = {
+function clientSteps(dosePoints: number, pide: PideMode): TourStep[] {
+  const first: Record<PideMode, Pick<TourStep, 'title' | 'body'>> = {
     ask: { title: 'Pide tu canción', body: 'Búscala y entra en el ranking.' },
     mine: { title: 'Tu canción, en directo', body: 'Aquí ves su puesto. Tócalo para verla.' },
     wait: { title: 'Aquí se pide', body: 'Cuando acabe la espera, pide otra.' },
   }
   return [
     { target: 'pide', icon: MusicNotesPlus, tone: 'cyan', ...first[pide] },
-    { target: 'ranking', icon: RankingIcon, tone: 'cyan', title: 'La 1.ª suena después', body: 'En el último minuto, VS: la 1.ª contra la 2.ª, con puntos ×2.' },
+    { target: 'ranking', icon: RankingIcon, tone: 'cyan', title: 'La 1.ª suena después', body: 'En el último minuto, VS: la 1.ª contra la 2.ª, con puntos ×2.' },
     { target: 'jugar', icon: Lightning, tone: 'amber', title: 'Juega y súmale puntos', body: 'Minijuegos de segundos. Lo que ganas va a tu canción.' },
     { target: 'dosis', icon: Pill, tone: 'cyan', title: `Consume: +${dosePoints}`, body: 'Pide tu dosis en la barra y escanéala aquí.' },
   ]
@@ -112,7 +125,7 @@ function useTargetRect(target: string | null, tipH: number, vp: { w: number; h: 
 }
 
 /**
- * Tour de bienvenida sobre la pantalla real: oscurece todo menos una pieza
+ * Tour de bienvenida del cliente sobre la pantalla real: oscurece todo menos una pieza
  * (PIDE, la escalera, JUGAR, la dosis) y le pone al lado un rótulo con su icono.
  * La pieza encendida funciona: tocarla hace lo suyo y cierra el tour.
  * Sale una vez por móvil; se vuelve a ver con el botón «?».
@@ -128,16 +141,49 @@ export function Tour({
   dosePoints: number
   pide: PideMode
 }) {
+  return <GuidedTour open={open} onClose={onClose} steps={clientSteps(dosePoints, pide)} finishLabel="¡A jugar!" />
+}
+
+/**
+ * Motor del tour: un velo que deja encendida una pieza real de la pantalla y un rótulo junto a ella.
+ * - Un paso sin `target` sale en el centro con todo apagado (bienvenida).
+ * - `interactive`: la pieza encendida funciona (tocarla hace lo suyo y cierra el tour). Si no, tocarla avanza.
+ * - `back`: botón «Atrás», para tours largos.
+ * - `startLabel`: texto del botón en el primer paso.
+ */
+export function GuidedTour({
+  open,
+  onClose,
+  steps: list,
+  seenKey = KEY,
+  finishLabel,
+  startLabel,
+  interactive = true,
+  back = false,
+  roomy = false,
+}: {
+  open: boolean
+  onClose: () => void
+  steps: TourStep[]
+  seenKey?: string
+  finishLabel: string
+  startLabel?: string
+  interactive?: boolean
+  back?: boolean
+  /** Rótulo ancho: la explicación va debajo del icono, a todo lo ancho (tours con más texto). */
+  roomy?: boolean
+}) {
   const reduce = !!useReducedMotion()
   const vp = useViewport()
   const [i, setI] = useState(0)
   const [tipH, setTipH] = useState(180)
-  const list = steps(dosePoints, pide)
   const step = open ? list[i] : undefined
+  const centered = !!step && !step.target
   const found = useTargetRect(step?.target ?? null, tipH, vp, reduce)
   const rect = found === 'missing' ? null : found
   const nextBtn = useRef<HTMLButtonElement>(null)
   const skipBtn = useRef<HTMLButtonElement>(null)
+  const backBtn = useRef<HTMLButtonElement>(null)
   const returnTo = useRef<HTMLElement | null>(null)
   const tip = useRef<HTMLDivElement>(null)
 
@@ -149,11 +195,12 @@ export function Tour({
 
   // El foco entra en el tour en cuanto existe (en el primer pintado aún no hay rótulo).
   // Va al tour entero y no al «Vale»: así el «Vale» no lleva un aro que se confunda con la pieza iluminada.
-  // Con Tab se pasa a «Vale» y «Saltar»; el cambio de paso lo anuncia la zona viva del rótulo.
+  // Con Tab se pasa a los botones; el cambio de paso lo anuncia la zona viva del rótulo.
   const dialog = useRef<HTMLDivElement>(null)
+  const shown = !!rect || centered
   useEffect(() => {
-    if (open && rect) dialog.current?.focus({ preventScroll: true })
-  }, [open, !!rect])
+    if (open && shown) dialog.current?.focus({ preventScroll: true })
+  }, [open, shown])
 
   // Alto real del rótulo, para que quepa con el hueco (móvil girado o pequeño)
   useLayoutEffect(() => {
@@ -165,7 +212,7 @@ export function Tour({
   })
 
   function close({ toTop }: { toTop: boolean }) {
-    markSeen()
+    markSeen(seenKey)
     onClose()
     if (toTop) {
       scrollTo({ top: 0, behavior: reduce ? 'instant' : 'smooth' })
@@ -177,6 +224,7 @@ export function Tour({
     if (i + 1 >= list.length) finish()
     else setI(i + 1)
   }
+  const goBack = () => setI((x) => Math.max(0, x - 1))
 
   // Si una pieza no está (p. ej. se ha desmontado), se pasa a la siguiente
   useEffect(() => {
@@ -185,7 +233,7 @@ export function Tour({
 
   // Tocar la pieza encendida hace lo suyo (abre la búsqueda, los juegos…) y da el tour por visto
   useEffect(() => {
-    if (!open || !step) return
+    if (!open || !step?.target || !interactive) return
     const el = document.querySelector<HTMLElement>(`[data-tour="${step.target}"]`)
     if (!el) return
     const onTap = () => close({ toTop: false })
@@ -198,11 +246,13 @@ export function Tour({
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') finish()
       else if (e.key === 'ArrowRight') advance()
-      else if (e.key === 'ArrowLeft') setI((x) => Math.max(0, x - 1))
+      else if (e.key === 'ArrowLeft') goBack()
       else if (e.key === 'Tab') {
-        // El foco se queda en el rótulo: Saltar ↔ Vale
+        // El foco se queda en el rótulo y da la vuelta entre sus botones
         e.preventDefault()
-        ;(document.activeElement === nextBtn.current ? skipBtn : nextBtn).current?.focus()
+        const ring = [skipBtn.current, backBtn.current, nextBtn.current].filter((b): b is HTMLButtonElement => !!b)
+        const at = ring.indexOf(document.activeElement as HTMLButtonElement)
+        ring[(at + (e.shiftKey ? ring.length - 1 : 1)) % ring.length]?.focus()
       }
     }
     addEventListener('keydown', onKey)
@@ -214,13 +264,16 @@ export function Tour({
   const above = !!spot && spot.top + spot.height / 2 > vp.h / 2
   const tipTop = spot
     ? Math.min(vp.h - tipH - EDGE, Math.max(EDGE, above ? spot.top - GAP - tipH : spot.top + spot.height + GAP))
-    : 0
+    : Math.max(EDGE, (vp.h - tipH) / 2)
   const arrowX = spot ? spot.left + spot.width / 2 : 0
   const Glyph = step?.icon
+  const last = i + 1 >= list.length
+  const nextLabel = last ? finishLabel : i === 0 && startLabel ? startLabel : 'Vale'
+  const many = list.length > 5
 
   return (
     <AnimatePresence>
-      {open && step && spot && Glyph && (
+      {open && step && (spot || centered) && Glyph && (
         <motion.div
           ref={dialog}
           tabIndex={-1}
@@ -234,66 +287,102 @@ export function Tour({
           aria-labelledby="tour-title"
           aria-describedby="tour-body"
         >
-          {/* Tocar fuera avanza (nadie se queda atascado); el hueco queda libre para tocar la pieza */}
-          {[
-            { top: 0, left: 0, right: 0, height: Math.max(0, spot.top) },
-            { top: spot.top + spot.height, left: 0, right: 0, bottom: 0 },
-            { top: spot.top, left: 0, width: Math.max(0, spot.left), height: spot.height },
-            { top: spot.top, left: spot.left + spot.width, right: 0, height: spot.height },
-          ].map((style, k) => (
-            <div key={k} className="pointer-events-auto absolute" style={style} onClick={advance} aria-hidden />
-          ))}
+          {spot ? (
+            <>
+              {/* Tocar fuera avanza (nadie se queda atascado); el hueco queda libre para tocar la pieza */}
+              {[
+                { top: 0, left: 0, right: 0, height: Math.max(0, spot.top) },
+                { top: spot.top + spot.height, left: 0, right: 0, bottom: 0 },
+                { top: spot.top, left: 0, width: Math.max(0, spot.left), height: spot.height },
+                { top: spot.top, left: spot.left + spot.width, right: 0, height: spot.height },
+                // Si la pieza no debe funcionar durante el tour, tocarla también avanza
+                ...(interactive ? [] : [{ top: spot.top, left: spot.left, width: spot.width, height: spot.height }]),
+              ].map((style, k) => (
+                <div key={k} className="pointer-events-auto absolute" style={style} onClick={advance} aria-hidden />
+              ))}
 
-          {/* El foco: un hueco en el velo con el filo de luz ámbar */}
-          <motion.div
-            aria-hidden
-            className="absolute rounded-[10px]"
-            initial={false}
-            animate={spot}
-            transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 30 }}
-            style={{
-              boxShadow:
-                '0 0 0 3px var(--color-amber), 0 0 22px 2px rgb(255 194 61 / 0.55), 0 0 0 9999px rgb(5 6 7 / 0.84)',
-            }}
-          />
+              {/* El foco: un hueco en el velo con el filo de luz ámbar */}
+              <motion.div
+                aria-hidden
+                className="absolute rounded-[10px]"
+                initial={false}
+                animate={spot}
+                transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 30 }}
+                style={{
+                  boxShadow:
+                    '0 0 0 3px var(--color-amber), 0 0 22px 2px rgb(255 194 61 / 0.55), 0 0 0 9999px rgb(5 6 7 / 0.84)',
+                }}
+              />
+            </>
+          ) : (
+            // Paso sin pieza: todo apagado y el rótulo en el centro. Aquí tocar fuera no hace nada.
+            <div className="pointer-events-auto absolute inset-0 bg-[#050607]/90" aria-hidden />
+          )}
 
           {/* El rótulo */}
           <div className="absolute inset-x-0 mx-auto max-w-lg px-4" style={{ top: tipTop }}>
             <motion.div
               ref={tip}
               key={i}
-              initial={reduce ? { opacity: 0 } : { opacity: 0, y: above ? 10 : -10 }}
+              initial={reduce ? { opacity: 0 } : { opacity: 0, y: centered ? 14 : above ? 10 : -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               className="bezel pointer-events-auto relative rounded-machine p-[3px]"
             >
               {/* Pico que apunta a la pieza */}
-              <span
-                aria-hidden
-                className={cx('absolute size-3.5 rotate-45 bg-[#1b1e24]', above ? '-bottom-[6px]' : '-top-[6px]')}
-                style={{ left: `clamp(18px, calc(${arrowX}px - 16px - 7px - max(0px, (100vw - 512px) / 2)), calc(100% - 32px))` }}
-              />
+              {spot && (
+                <span
+                  aria-hidden
+                  className={cx('absolute size-3.5 rotate-45 bg-[#1b1e24]', above ? '-bottom-[6px]' : '-top-[6px]')}
+                  style={{ left: `clamp(18px, calc(${arrowX}px - 16px - 7px - max(0px, (100vw - 512px) / 2)), calc(100% - 32px))` }}
+                />
+              )}
               <div className="relative flex flex-col gap-4 rounded-[4px] bg-[#1b1e24] p-4">
-                <div className="flex items-center gap-3.5">
+                <div className={cx('flex gap-3.5', roomy ? 'items-center' : 'items-start')}>
                   <span
                     className={cx(
                       'grid size-14 shrink-0 place-items-center rounded-machine',
-                      step.tone === 'amber' ? 'bg-amber text-print' : 'glass',
+                      step.tone === 'amber' ? 'bg-amber text-print' : step.tone === 'metal' ? 'bezel text-paper' : 'glass',
                     )}
                   >
                     <Glyph size={32} weight="fill" aria-hidden />
                   </span>
-                  <div className="min-w-0" aria-live="polite">
+                  <div className="min-w-0 self-center" aria-live="polite">
                     <p id="tour-title" className="font-display text-[19px] leading-[1.05]">
                       {step.title}
                     </p>
-                    <p id="tour-body" className="mt-1.5 text-[15px] font-semibold leading-snug text-paper/75">
-                      {step.body}
-                    </p>
+                    {!roomy && (
+                      <div id="tour-body" className="mt-1.5 text-[15px] font-semibold leading-snug text-paper/75">
+                        {step.body}
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Bulbs count={list.length} lit={i + 1} size={9} className="w-16" />
+                {roomy && (
+                  <div id="tour-body" className="-mt-1 flex flex-col gap-3">
+                    <div className="text-[15px] font-semibold leading-snug text-paper/80">{step.body}</div>
+                    {step.list && (
+                      <ul className="flex flex-col gap-2.5">
+                        {step.list.map(({ icon: Item, text }, k) => (
+                          <li key={k} className="flex items-start gap-3">
+                            <span className="grid size-8 shrink-0 place-items-center rounded-[4px] bg-panel-2 text-cyan">
+                              <Item size={18} weight="bold" aria-hidden />
+                            </span>
+                            <span className="pt-[5px] text-[14px] font-semibold leading-snug text-paper/85">{text}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {step.tip && (
+                      <p className="flex items-start gap-2 rounded-[4px] bg-amber/10 px-3 py-2 text-[13px] font-semibold leading-snug text-amber">
+                        <Lightbulb size={16} weight="fill" className="mt-px shrink-0" aria-hidden />
+                        <span>{step.tip}</span>
+                      </p>
+                    )}
+                  </div>
+                )}
+                <div className={cx('flex items-center', back ? 'gap-2' : 'gap-3')}>
+                  <Bulbs count={list.length} lit={i + 1} size={many ? 7 : 9} className={many ? 'w-[72px]' : 'w-16'} />
                   <span id="tour-step" className="sr-only">
                     Paso {i + 1} de {list.length}
                   </span>
@@ -304,13 +393,22 @@ export function Tour({
                   >
                     Saltar
                   </button>
+                  {back && i > 0 && (
+                    <button
+                      ref={backBtn}
+                      onClick={goBack}
+                      className="min-h-11 px-2 text-[14px] font-bold text-paper/80 active:text-paper"
+                    >
+                      Atrás
+                    </button>
+                  )}
                   <button
                     ref={nextBtn}
                     onClick={advance}
                     aria-describedby="tour-title tour-body tour-step"
-                    className="pulsador min-h-12 min-w-[112px] bg-amber px-4 font-display text-[15px] leading-none text-print [--pulsador-glow:rgb(255_194_61/0.4)]"
+                    className={`pulsador min-h-12 whitespace-nowrap ${back ? 'min-w-[104px]' : 'min-w-[112px]'} bg-amber px-4 font-display text-[15px] leading-none text-print [--pulsador-glow:rgb(255_194_61/0.4)]`}
                   >
-                    {i + 1 >= list.length ? '¡A jugar!' : 'Vale'}
+                    {nextLabel}
                   </button>
                 </div>
               </div>
