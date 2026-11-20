@@ -6,6 +6,7 @@ import { Avatar, FaceSheet } from '../components/Avatar.tsx'
 import { DoseSheet } from '../components/DoseSheet.tsx'
 import { ScanSheet } from '../components/ScanSheet.tsx'
 import { DuelBar, DuelOverlay, getDuel } from '../components/DuelView.tsx'
+import { DuelCountdown } from '../components/DuelCountdown.tsx'
 import { GamePicker } from '../components/GamePicker.tsx'
 import { Bulbs, Led } from '../components/machine.tsx'
 import { NowPlaying } from '../components/NowPlaying.tsx'
@@ -251,6 +252,7 @@ export function Home({
       />
       <ScanSheet open={scanOpen} onClose={() => setScanOpen(false)} onCode={onScanned} />
       <DoseSheet code={doseCode} state={state} me={me} onClose={clearDose} />
+      <DuelCountdown state={state} me={me} blocked={!!session} />
       <DuelOverlay
         state={state}
         me={me}

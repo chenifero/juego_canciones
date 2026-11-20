@@ -876,6 +876,13 @@ export class Engine {
     return pb.at + (pb.track.durationMs - pb.progressMs) - this.settings.lockBeforeEndMs
   }
 
+  /** Cuándo empieza el duelo final de esta ronda (null si no habrá: menos de dos canciones o nada sonando). */
+  duelAt(): number | null {
+    const lockAt = this.lockAt()
+    if (lockAt === null || this.waiting().length < 2) return null
+    return lockAt - this.settings.duelWindowMs
+  }
+
   // ───────────────────────── estados públicos ─────────────────────────
 
   publicState(online: number): PublicState {
@@ -898,6 +905,7 @@ export class Engine {
       locked: locked ? this.toPublic(locked) : null,
       duel: this.duel,
       lockAt: this.lockAt(),
+      duelAt: this.duelAt(),
       dosePoints: this.settings.dosePoints,
       online,
       serverTime: Date.now(),

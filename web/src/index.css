@@ -253,3 +253,73 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ───────────── Letrero de neón de la cuenta atrás del VS ─────────────
+   Dos tubos que se encuentran en el centro: cian para la #1 y rosa para la #2.
+   La luz se derrama hacia su lado, como un letrero de bar contra la pared. */
+@keyframes neon-on {
+  0% { opacity: 0.12; }
+  7% { opacity: 1; }
+  12% { opacity: 0.3; }
+  20% { opacity: 1; }
+  27% { opacity: 0.55; }
+  34%, 100% { opacity: 1; }
+}
+@utility neon-sign {
+  position: relative;
+  border-radius: 6px;
+  padding: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--color-glass-hi) 0%,
+    var(--color-cyan) 14%,
+    var(--color-cyan) 49.2%,
+    var(--color-ink) 49.2%,
+    var(--color-ink) 50.8%,
+    var(--color-pink) 50.8%,
+    var(--color-pink) 86%,
+    #ff8fbb 100%
+  );
+  box-shadow:
+    -18px 8px 48px -12px rgb(25 195 255 / 0.65),
+    18px 8px 48px -12px rgb(255 61 139 / 0.65),
+    0 24px 60px -20px rgb(0 0 0 / 0.9);
+  animation: neon-on 0.9s linear both;
+}
+/* El panel negro dentro del letrero, con la luz de los tubos lamiendo los cantos */
+@utility neon-panel {
+  border-radius: 4px;
+  background: radial-gradient(90% 70% at 50% 40%, #15181e 0%, #08090b 100%);
+  box-shadow:
+    inset 16px 0 40px -22px rgb(25 195 255 / 0.55),
+    inset -16px 0 40px -22px rgb(255 61 139 / 0.55),
+    inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+/* Rótulo de tubo: núcleo blanco con la luz de los dos colores a cada lado */
+@utility neon-text {
+  color: #fff;
+  text-shadow:
+    0 0 2px #fff,
+    -3px 1px 14px rgb(25 195 255 / 0.9),
+    3px 1px 14px rgb(255 61 139 / 0.9);
+}
+@utility neon-tube-cyan {
+  box-shadow:
+    0 0 0 3px var(--color-cyan),
+    0 0 0 4px rgb(255 255 255 / 0.5),
+    -10px 8px 28px -4px rgb(25 195 255 / 0.75);
+}
+@utility neon-tube-pink {
+  box-shadow:
+    0 0 0 3px var(--color-pink),
+    0 0 0 4px rgb(255 255 255 / 0.5),
+    10px 8px 28px -4px rgb(255 61 139 / 0.75);
+}
+
+/* Móvil tumbado: la máquina solo se juega en vertical */
+@utility rotate-lock {
+  display: none;
+  @media (orientation: landscape) and (pointer: coarse) and (max-height: 560px) {
+    display: grid;
+  }
+}

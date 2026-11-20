@@ -172,8 +172,12 @@ async function tick(): Promise<void> {
 }
 
 function loop(): void {
+  // Cerca del duelo o del cierre, se mira cada segundo para que la fase cambie a tiempo
   const lockAt = engine.lockAt()
-  const soon = lockAt !== null && lockAt - Date.now() < 12_000
+  const duelAt = engine.duelAt()
+  const soon =
+    (lockAt !== null && lockAt - Date.now() < 12_000) ||
+    (duelAt !== null && Math.abs(duelAt - Date.now() - 5_000) < 7_000)
   void tick().finally(() => setTimeout(loop, soon ? 1_000 : 2_500))
 }
 

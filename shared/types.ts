@@ -76,6 +76,8 @@ export interface PublicState {
   duel: DuelInfo | null
   /** Momento (reloj del servidor) en que se cierran las votaciones. */
   lockAt: number | null
+  /** Momento (reloj del servidor) en que empieza el duelo final, si hay al menos dos canciones. */
+  duelAt: number | null
   dosePoints: number
   online: number
   serverTime: number

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { MotionConfig } from 'motion/react'
 import './index.css'
 import { ClientApp } from './client/ClientApp.tsx'
+import { RotateLock } from './components/RotateLock.tsx'
 import { Toasts } from './components/Toasts.tsx'
 import { printConsoleSignature } from './lib/consoleSignature.ts'
 
@@ -22,6 +23,8 @@ createRoot(document.getElementById('root')!).render(
         <Page />
       </Suspense>
       <Toasts />
+      {/* El cartel se ve en el ordenador para imprimirlo: ahí no se bloquea el giro */}
+      {Page !== Poster && <RotateLock />}
     </MotionConfig>
   </StrictMode>,
 )
