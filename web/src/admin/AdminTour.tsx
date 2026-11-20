@@ -3,7 +3,6 @@ import {
   ListNumbers,
   Pill,
   Power,
-  Printer,
   Question,
   SkipForward,
   SlidersHorizontal,
@@ -101,7 +100,7 @@ function adminSteps({ barOpen: open, dosePoints, lockSecs }: Facts): TourStep[] 
       list: [
         { icon: ListNumbers, text: 'Ranking: las canciones pedidas. Quita la que no quieras que suene.' },
         { icon: UsersThree, text: 'Gente: quién ha entrado. Quita una foto o bloquea un móvil esta noche.' },
-        { icon: Printer, text: 'Ajustes: puntos y tiempos del juego, la cuenta de Spotify y el cartel con el QR para imprimir.' },
+        { icon: SlidersHorizontal, text: 'Ajustes: puntos y tiempos del juego, y la cuenta de Spotify.' },
       ],
     },
     ...(open ? [night] : []),

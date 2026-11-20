@@ -7,7 +7,6 @@ import {
   Pill,
   Plus,
   Power,
-  Printer,
   Prohibit,
   Question,
   SignOut,
@@ -698,10 +697,6 @@ function SettingsDrawer({
           {s.blockExplicit ? 'Sí' : 'No'}
         </span>
       </button>
-
-      <a href="/cartel" target="_blank" rel="noreferrer" className="pulsador bezel mt-4 flex h-14 items-center justify-center gap-3 font-display text-[15px]">
-        <Printer size={22} weight="bold" aria-hidden /> Imprimir el cartel
-      </a>
 
       {/* Guardar: fijo abajo mientras haya cambios sin aplicar */}
       <div className="sticky bottom-0 -mx-4 mt-4 bg-gradient-to-t from-ink from-75% to-transparent px-4 pb-2 pt-6">

@@ -679,4 +679,12 @@ A Sergio le gusta cómo se ven los juegos, pero los quería **un poco más difí
   8. «¿Se te olvida algo?» sobre el «?».
 - **Código:** `web/src/admin/AdminTour.tsx` (pasos). El motor de `Tour.tsx` pasa a ser `GuidedTour`, que sirve para los dos tours: pasos sin pieza (en el centro), rótulo ancho con lista y consejo en ámbar, «Atrás» y pieza que no se dispara. El tour del cliente se ve igual que antes.
 - Recorrido entero a 390×844 con la barra abierta y cerrada; el tour del cliente comprobado. Tipos, `npm test` y build en verde.
+- **Subido a GitHub** (`420e98c` y `8e09e79`). Las pruebas de GitHub pasan, pero **el despliegue a Fly falla: se acabó la prueba gratuita** («trial has ended, please add a credit card»). Hasta poner tarjeta, producción sigue con la versión anterior.
+- Sergio puso la tarjeta en Fly. Despliegue relanzado y en verde: producción ya sirve la cuenta atrás, el giro bloqueado y el tour del mando.
+
+## 20/11/2026 · Fuera el cartel con QR
+
+- **Petición de Sergio:** quitar lo del cartel QR.
+- Borrada la página `/cartel` (`web/src/Poster.tsx`) y su ruta, el botón «Imprimir el cartel» de Ajustes, la mención en el tour del mando y en el README. El QR de las dosis sigue igual.
+- Ahora `/cartel` abre el juego normal. Tipos, `npm test` y build en verde.
 

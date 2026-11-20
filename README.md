@@ -25,7 +25,6 @@ cp .env.example .env      # y rellena SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET 
 
 - **Juego:** http://127.0.0.1:5173. Desde el móvil, en la misma wifi, usa `http://IP-de-tu-PC:5173`.
 - **Panel de la dueña:** http://127.0.0.1:5173/admin, con el PIN de `ADMIN_PIN`.
-- **Cartel para imprimir:** http://127.0.0.1:5173/cartel (en producción, imprímelo desde la web publicada para que el QR lleve la dirección buena).
 
 ### Conectar Spotify (una sola vez)
 

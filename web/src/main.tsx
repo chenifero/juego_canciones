@@ -7,14 +7,13 @@ import { RotateLock } from './components/RotateLock.tsx'
 import { Toasts } from './components/Toasts.tsx'
 import { printConsoleSignature } from './lib/consoleSignature.ts'
 
-// El panel y el cartel solo los abre la dueña: se cargan aparte
+// El panel solo lo abre la dueña: se carga aparte
 const AdminApp = lazy(() => import('./admin/AdminApp.tsx').then((m) => ({ default: m.AdminApp })))
-const Poster = lazy(() => import('./Poster.tsx').then((m) => ({ default: m.Poster })))
 
 printConsoleSignature()
 
 const path = location.pathname.replace(/\/+$/, '')
-const Page = path === '/admin' ? AdminApp : path === '/cartel' ? Poster : ClientApp
+const Page = path === '/admin' ? AdminApp : ClientApp
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -23,8 +22,7 @@ createRoot(document.getElementById('root')!).render(
         <Page />
       </Suspense>
       <Toasts />
-      {/* El cartel se ve en el ordenador para imprimirlo: ahí no se bloquea el giro */}
-      {Page !== Poster && <RotateLock />}
+      <RotateLock />
     </MotionConfig>
   </StrictMode>,
 )

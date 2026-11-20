@@ -37,7 +37,6 @@ No es una jukebox de cola: es una competición en directo. La canción que suena
 - **Dosis:** con cada consumición, la dueña enseña un QR de un solo uso que suma puntos a la canción que elijas.
 - **Happy hour:** la dueña la activa y todo vale ×2.
 - La perdedora del duelo conserva el 50 % de sus puntos.
-- **Pendiente:** rediseñar el cartel y desplegar en Fly.
 - **Stack:** React 19, Vite, Tailwind 4, Motion y Socket.IO. Funciona con conexiones móviles de bar (la wifi puede ser mala).
 
 ## Brand Commitments
